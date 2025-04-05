@@ -47,6 +47,11 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // header per indicare al browser che la risposta sarà XML (e non HTML)
 header("Content-Type: application/xml");
+//header("Content-Type: application/json");
+
+// header('Access-Control-Allow-Origin: *');
+// header('Access-Control-Allow-Methods: GET,PUT,PATCH,POST,DELETE');
+// header('Access-Control-Allow-Headers: Origin,X-Requested-With,Content-Type,Accept'); 
 
 $statuscode = 405; //status code inizializzato a 405 Method Not Allowed
 
