@@ -1,4 +1,4 @@
-# faluto
+# flauto
 
 A new Flutter project.
 
