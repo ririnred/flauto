@@ -2,7 +2,8 @@
 ini_set("display_errors", 1);
 error_reporting(E_ALL);
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-/* schema
+//------------------- schema -----------------------------
+/*
     CREATE TABLE `persona` (
       `id` int(11) NOT NULL,
       `nome` varchar(64) NOT NULL,
@@ -23,14 +24,20 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
       `cliente_id` int(11) NOT NULL,
       `data_creazione` datetime NOT NULL DEFAULT current_timestamp()
     )
-    */
+*/
+//END ------------------- schema -----------------------------
 
+//------------------- DOCS ----------------------------------
 /*
     WEB SERVICE MULTI-OPERAZIONE CON NOME DELL'OPERAZIONE IN URL
     richiesta http://localhost/scientology_market/smapi.php/operazione?querystring
 
     OPERAZIONI:
-    -read (metodo: GET) (tipo: read) (parametro: content) (risposta: XML)
+    -read (metodo: GET) (tipo: read) (parametro: content) (risposta: JSON(default) | XML)
+        -se response=json (default)
+            restituisce la risposta in json
+        -se response=xml
+            restituisce la risposta in xml
         -se content=clienti
             restituisce l'elenco dei clienti registrati e che quindi ad un certo punto hanno richiesto una tessera
         -se content=sedi
@@ -39,11 +46,15 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
             restituisce l'elenco di tutte le tessere
         -se content=popolarita_sedi
             restituisce l'elenco delle sedi con il numero totale di tessere mai create in tale sede ed il totale di tessere create per ogni mese se ce ne sono state
-    */
+*/
+//END ------------------- DOCS -----------------------------
 
-/*
 
-    */
+
+
+
+
+//----------------------------------- INIT VAR ------------------------------------------
 
 // header per indicare al browser che la risposta sarà XML (e non HTML)
 header("Content-Type: application/xml");
@@ -54,7 +65,29 @@ $uri_arr = parse_url($_SERVER["REQUEST_URI"]); //scompone l'uri in parti (vedi m
 $temp = explode("/", $uri_arr["path"]);
 $op = end($temp); //estrae l'ultima parte dell'uri (dopo l'ultimo /) quindi l'ultima operazione richiesta
 
+$response_type='json';
+if(isset($_REQUEST['response'])){
+    switch ($_REQUEST['response']) {
+        case 'json':
+            $response_type='json';
+            break;
+        case 'xml':
+            $response_type='xml';
+            break;
+        default:
+            $response_type='json';
+            break;
+    }
+}
+
+// header per indicare al browser che la risposta saranno dati in json/xml 
+header("Content-Type: application/$response_type");
+
 $conn = new mysqli("localhost", "root", "", "scientology_market");
+
+//END ----------------------------------- INIT VAR ------------------------------------------
+
+
 
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
     //switch per gestire le varie operazioni
@@ -77,26 +110,47 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                             $statuscode = 200; //l'operazione ha avuto successo
                         }
 
-                        // elemento radice (attenzione: va scritto come se fosse un XML completo)
-                        $xml = new SimpleXMLElement("<clienti_tesserati/>");
-                        for ($i = 0; $i < $res->num_rows; $i++) {
-                            $record = $res->fetch_assoc();
+                        if($response_type=='xml'){
+                            // elemento radice (attenzione: va scritto come se fosse un XML completo)
+                            $xml = new SimpleXMLElement("<clienti_tesserati/>");
+                            for ($i = 0; $i < $res->num_rows; $i++) {
+                                $record = $res->fetch_assoc();
+    
+                                // aggiunta di un elemento figlio alla radice
+                                $child = $xml->addChild("cliente");
+    
+                                // aggiunta di attributi ed elementi all'elemento figlio
+                                $child->addAttribute("id", $record["id"]);
+                                $child->addChild("nome", $record["nome"]);
+                                $child->addChild("cognome", $record["cognome"]);
+                                $child->addChild("mail", $record["mail"]);
+                            }
+                            // invio risposta XML al client
+                            echo $xml->asXML();
+                        }else{ //JSON
+                            $json=new stdClass();
+                            //elemento radice
+                            $json->clienti_tesserati=[];
 
-                            // aggiunta di un elemento figlio alla radice
-                            $child = $xml->addChild("cliente");
+                            for ($i = 0; $i < $res->num_rows; $i++) {
+                                $record = $res->fetch_assoc();
 
-                            // aggiunta di attributi ed elementi all'elemento figlio
-                            $child->addAttribute("id", $record["id"]);
-                            $child->addChild("nome", $record["nome"]);
-                            $child->addChild("cognome", $record["cognome"]);
-                            $child->addChild("mail", $record["mail"]);
+                                //singolo elemento con i suoi attributi
+                                $json->clienti_tesserati[$i]=(object)[
+                                    "id" => $record["id"],
+                                    "nome" => $record["nome"],
+                                    "cognome" => $record["cognome"],
+                                    "mail" => $record["mail"],
+                                ];
+                                
+                            }
+                            echo json_encode($json);
                         }
 
                         $res->free();
-
-                        // invio risposta XML al client
-                        echo $xml->asXML();
                         break;
+
+
                     case "sedi":
 
                         $sql = "SELECT * FROM sede"; //query per estrarre tutte le sedi
@@ -132,24 +186,45 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                             $statuscode = 200; //l'operazione ha avuto successo
                         }
 
-                        // elemento radice (attenzione: va scritto come se fosse un XML completo)
-                        $xml = new SimpleXMLElement("<sedi/>");
-                        for ($i = 0; $i < $res->num_rows; $i++) {
-                            $record = $res->fetch_assoc();
+                        if($response_type=='xml'){
+                            // elemento radice (attenzione: va scritto come se fosse un XML completo)
+                            $xml = new SimpleXMLElement("<sedi/>");
+                            for ($i = 0; $i < $res->num_rows; $i++) {
+                                $record = $res->fetch_assoc();
 
-                            // aggiunta di un elemento figlio alla radice
-                            $child = $xml->addChild("sede");
+                                // aggiunta di un elemento figlio alla radice
+                                $child = $xml->addChild("sede");
 
-                            // aggiunta di attributi ed elementi all'elemento figlio
-                            $child->addChild("nome", $record["nome"]);
-                            $child->addChild("indirizzo", $record["indirizzo"]);
+                                // aggiunta di attributi ed elementi all'elemento figlio
+                                $child->addChild("nome", $record["nome"]);
+                                $child->addChild("indirizzo", $record["indirizzo"]);
+                            }
+                            // invio risposta XML al client
+                            echo $xml->asXML();
+
+                        }else{ //JSON
+                            $json=new stdClass();
+                            //elemento radice
+                            $json->sedi=[];
+
+                            for ($i = 0; $i < $res->num_rows; $i++) {
+                                $record = $res->fetch_assoc();
+
+                                //singolo elemento con i suoi attributi
+                                $json->sedi[$i]=(object)[
+                                    "nome"=> $record["nome"],
+                                    "indirizzo"=> $record["indirizzo"],
+                                ];
+                                
+                            }
+                            echo json_encode($json);
                         }
-
+                        
                         $res->free();
 
-                        // invio risposta XML al client
-                        echo $xml->asXML();
                         break;
+
+
                     case "tessere":
 
                         //query per estrarre tutte le tessere create con i relativi dati della sede di creazione e del clientes
@@ -185,43 +260,70 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                             $statuscode = 200; //l'operazione ha avuto successo
                         }
 
-                        // elemento radice (attenzione: va scritto come se fosse un XML completo)
-                        $xml = new SimpleXMLElement("<tessere/>");
-                        for ($i = 0; $i < $res->num_rows; $i++) {
-                            $record = $res->fetch_assoc();
+                        if($response_type=='xml'){
+                            // elemento radice (attenzione: va scritto come se fosse un XML completo)
+                            $xml = new SimpleXMLElement("<tessere/>");
+                            for ($i = 0; $i < $res->num_rows; $i++) {
+                                $record = $res->fetch_assoc();
 
-                            // aggiunta di un elemento figlio alla radice
-                            $child = $xml->addChild("tessera");
+                                // aggiunta di un elemento figlio alla radice
+                                $child = $xml->addChild("tessera");
 
-                            // aggiunta di attributi ed elementi all'elemento figlio
-                            $child->addAttribute(
-                                "numero_tessera",
-                                $record["id"]
-                            );
-                            $child->addChild("punti", $record["punti"]);
-                            $child->addChild(
-                                "data_di_creazione",
-                                $record["data_creazione"]
-                            );
-                            $child->addChild(
-                                "sede_di_creazione",
-                                $record["sede_di_creazione"]
-                            );
-                            $clientechild = $child->addChild("cliente");
-                            $clientechild->addAttribute("id", $record["cId"]);
-                            $clientechild->addChild("nome", $record["cNome"]);
-                            $clientechild->addChild(
-                                "cognome",
-                                $record["cCognome"]
-                            );
-                            $clientechild->addChild("mail", $record["cEmail"]);
+                                // aggiunta di attributi ed elementi all'elemento figlio
+                                $child->addAttribute(
+                                    "numero_tessera",
+                                    $record["id"]
+                                );
+                                $child->addChild("punti", $record["punti"]);
+                                $child->addChild(
+                                    "data_di_creazione",
+                                    $record["data_creazione"]
+                                );
+                                $child->addChild(
+                                    "sede_di_creazione",
+                                    $record["sede_di_creazione"]
+                                );
+                                $clientechild = $child->addChild("cliente");
+                                $clientechild->addAttribute("id", $record["cId"]);
+                                $clientechild->addChild("nome", $record["cNome"]);
+                                $clientechild->addChild(
+                                    "cognome",
+                                    $record["cCognome"]
+                                );
+                                $clientechild->addChild("mail", $record["cEmail"]);
+                            }
+                            echo $xml->asXML();
+
+                        }else{ //JSON
+                            $json=new stdClass();
+                            //elemento radice
+                            $json->tessere=[];
+
+                            for ($i = 0; $i < $res->num_rows; $i++) {
+                                $record = $res->fetch_assoc();
+
+                                //singolo elemento con i suoi attributi
+                                $json->tessere[$i]=(object)[
+                                    "numero_tessera" => $record["id"],
+                                    "data_di_creazione"=> $record["data_creazione"],
+                                    "sede_di_creazione"=> $record["sede_di_creazione"],
+                                    "cliente"=> (object)[
+                                        "id"=> $record["cId"],
+                                        "nome"=> $record["cNome"],
+                                        "cognome"=> $record["cCognome"],
+                                        "mail"=> $record["cEmail"],
+                                    ],
+                                ];
+                                
+                            }
+                            echo json_encode($json);
                         }
 
                         $res->free();
 
-                        // invio risposta XML al client
-                        echo $xml->asXML();
                         break;
+
+
                     case "popolarita_sedi":
 
                         //query per estrarre il totale delle tessere create con la sede di creazione comprendendo anche le sedi che non ne hanno create
@@ -275,70 +377,116 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                             $statuscode = 200; //l'operazione ha avuto successo
                         }
 
-                        // elemento radice (attenzione: va scritto come se fosse un XML completo)
-                        $xml = new SimpleXMLElement("<sedi/>");
-                        for ($i = 0; $i < $res->num_rows; $i++) {
-                            $record = $res->fetch_assoc();
+                        if($response_type=='xml'){
+                           // elemento radice (attenzione: va scritto come se fosse un XML completo)
+                            $xml = new SimpleXMLElement("<sedi/>");
+                            for ($i = 0; $i < $res->num_rows; $i++) {
+                                $record = $res->fetch_assoc();
 
-                            // aggiunta di un elemento figlio alla radice
-                            $child = $xml->addChild("sede");
+                                // aggiunta di un elemento figlio alla radice
+                                $child = $xml->addChild("sede");
 
-                            // aggiunta di attributi ed elementi all'elemento figlio
-                            $child->addAttribute("nome", $record["nome"]);
-                            $child->addAttribute(
-                                "indirizzo",
-                                $record["indirizzo"]
-                            );
-                            $child->addAttribute(
-                                "n_tot_di_tessere_create",
-                                $record["n_tessere_create"]
-                            );
-
-                            //query per estrarre il totale delle tessere diviso per mese
-                            $sql = "SELECT DATE_FORMAT(tessera.data_creazione ,'%M %Y') as mese, COUNT(tessera.id) AS ntessere FROM tessera JOIN sede ON sede.id=tessera.sede_creazione_id WHERE tessera.sede_creazione_id=? ";
-                            if(count($conditions)>0)
-                                $sql .= " AND " . implode(" AND ", $conditions);
-                            $sql .= " GROUP BY YEAR(tessera.data_creazione), MONTH(tessera.data_creazione) ORDER BY YEAR(tessera.data_creazione), MONTH(tessera.data_creazione); ";
-
-                            $stmt = $conn->prepare($sql);
-                            $stmt->bind_param("i".$stmt_type, $record["id"], ...$params);
-                            $stmt->execute();
-                            $childres = $stmt->get_result();
-
-                            //aggiunta dei mesi in cui sono state create delle tessere con il relativo totale
-                            for ($j = 0; $j < $childres->num_rows; $j++) {
-                                $childrecord = $childres->fetch_assoc();
-                                $sedechild = $child->addChild("periodo");
-                                $sedechild->addAttribute(
-                                    "mese",
-                                    $childrecord["mese"]
+                                // aggiunta di attributi ed elementi all'elemento figlio
+                                $child->addAttribute("nome", $record["nome"]);
+                                $child->addAttribute(
+                                    "indirizzo",
+                                    $record["indirizzo"]
                                 );
-                                $sedechild->addAttribute(
-                                    "n_tessere_create",
-                                    $childrecord["ntessere"]
+                                $child->addAttribute(
+                                    "n_tot_di_tessere_create",
+                                    $record["n_tessere_create"]
                                 );
+
+                                //query per estrarre il totale delle tessere diviso per mese
+                                $sql = "SELECT DATE_FORMAT(tessera.data_creazione ,'%M %Y') as mese, COUNT(tessera.id) AS ntessere FROM tessera JOIN sede ON sede.id=tessera.sede_creazione_id WHERE tessera.sede_creazione_id=? ";
+                                if(count($conditions)>0)
+                                    $sql .= " AND " . implode(" AND ", $conditions);
+                                $sql .= " GROUP BY YEAR(tessera.data_creazione), MONTH(tessera.data_creazione) ORDER BY YEAR(tessera.data_creazione), MONTH(tessera.data_creazione); ";
+
+                                $stmt = $conn->prepare($sql);
+                                $stmt->bind_param("i".$stmt_type, $record["id"], ...$params);
+                                $stmt->execute();
+                                $childres = $stmt->get_result();
+
+                                //aggiunta dei mesi in cui sono state create delle tessere con il relativo totale
+                                for ($j = 0; $j < $childres->num_rows; $j++) {
+                                    $childrecord = $childres->fetch_assoc();
+                                    $sedechild = $child->addChild("periodo");
+                                    $sedechild->addAttribute(
+                                        "mese",
+                                        $childrecord["mese"]
+                                    );
+                                    $sedechild->addAttribute(
+                                        "n_tessere_create",
+                                        $childrecord["ntessere"]
+                                    );
+                                }
+                                $childres->free();
                             }
-                            $childres->free();
-                        }
+                            echo $xml->asXML();
 
+                        }else{ //JSON
+                            $json=new stdClass();
+                            //elemento radice
+                            $json->sedi=[];
+
+                            for ($i = 0; $i < $res->num_rows; $i++) {
+                                $record = $res->fetch_assoc();
+
+                                //singolo elemento con i suoi attributi
+                                $json->sedi[$i]=(object)[
+                                    "nome"=> $record["nome"],
+                                    "indirizzo"=> $record["indirizzo"],
+                                    "n_tot_di_tessere_create"=> $record["n_tessere_create"],
+                                ];
+
+
+                                //query per estrarre il totale delle tessere diviso per mese
+                                $sql = "SELECT DATE_FORMAT(tessera.data_creazione ,'%M %Y') as mese, COUNT(tessera.id) AS ntessere FROM tessera JOIN sede ON sede.id=tessera.sede_creazione_id WHERE tessera.sede_creazione_id=? ";
+                                if(count($conditions)>0)
+                                    $sql .= " AND " . implode(" AND ", $conditions);
+                                $sql .= " GROUP BY YEAR(tessera.data_creazione), MONTH(tessera.data_creazione) ORDER BY YEAR(tessera.data_creazione), MONTH(tessera.data_creazione); ";
+
+                                $stmt = $conn->prepare($sql);
+                                $stmt->bind_param("i".$stmt_type, $record["id"], ...$params);
+                                $stmt->execute();
+                                $childres = $stmt->get_result();
+                                
+                                //aggiunta dei mesi in cui sono state create delle tessere con il relativo totale
+                                for ($j = 0; $j < $childres->num_rows; $j++) {
+                                    $childrecord = $childres->fetch_assoc();
+
+                                    $json->sedi[$i]->mesi[]=(array)[
+                                        "mese"=> $childrecord["mese"],
+                                        "n_tessere_create"=> $childrecord["ntessere"],
+                                    ];
+                                }
+                            }
+                            echo json_encode($json);
+                        }
+                        
                         $res->free();
 
-                        // invio risposta XML al client
-                        echo $xml->asXML();
                         break;
-                    default:
+
+
+                    default: //GET READ with unknown content 
                         $statuscode = 400; //l'operazione ha restituito false per parametri invalidi
                         break;
                 }
-            } else {
+
+            } else { //GET READ with no content
                 $statuscode = 400; //l'operazione ha restituito false per parametri insufficienti
             }
             break;
 
-        default:
+        default: //GET op other than READ 
             $statuscode = 404; //operazione non presente nella web api
             break;
     }
+
+
+    
 } else if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Switch per gestire diverse operazioni basate sul valore di $op
     switch ($op) {
