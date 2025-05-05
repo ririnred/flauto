@@ -1,9 +1,5 @@
 part of 'persona.dart';
 
-// **************************************************************************
-// JsonSerializableGenerator
-// **************************************************************************
-
 Persona _$PersonaFromJson(Map<String, dynamic> json) => Persona(
   id: (json['id'] as num?)?.toInt(),
   nome: json['nome'] as String,

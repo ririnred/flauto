@@ -4,7 +4,6 @@ part 'popolaritaSedi.g.dart';
 
 @JsonSerializable()
 class PopolaritaSedi{
-  int id;
   String nome;
   String indirizzo;
 
@@ -12,7 +11,6 @@ class PopolaritaSedi{
 
   PopolaritaSedi(
     {
-      required this.id,
       required this.nome,
       required this.indirizzo,
     }
