@@ -56,9 +56,6 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 //----------------------------------- INIT VAR ------------------------------------------
 
-// header per indicare al browser che la risposta sarà XML (e non HTML)
-header("Content-Type: application/xml");
-
 $statuscode = 405; //status code inizializzato a 405 Method Not Allowed
 
 $uri_arr = parse_url($_SERVER["REQUEST_URI"]); //scompone l'uri in parti (vedi manuale)
@@ -570,7 +567,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                     $conn->rollback(); // In caso di errore, annulla la transazione
                     $statuscode = 500; //l'operazione non si è conessa corretamente 
                 }
-
             } catch (Exception $e) {
                 $conn->rollback(); // In caso di errore, annulla la transazione
 
@@ -580,6 +576,36 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
         default:
             $statuscode = 404; //operazione non presente nella web api
             break;
+    }
+} else if ($_SERVER["REQUEST_METHOD"] == "PATCH" || $_SERVER["REQUEST_METHOD"] == "PUT") {
+    $input= file_get_contents("php://input");
+
+    $content_type= $_SERVER['HTTP_CONTENT_TYPE'];
+
+    if ($content_type == "application/json") {
+        $input = json_decode($input, false);
+    } else if ($content_type == "application/xml") {
+        $input = simplexml_load_string($input);
+        $input = json_encode($input);
+        $input = json_decode($input, false);
+    } else {
+        $statuscode = 400;
+    }
+    $table=array_keys($input)[0];
+    if($table=='persona' || $table=='sede' || $table=='tessera'){
+        $id= intval($input->{$table}->id);
+        if($id>-1){
+            // $iterator = new RecursiveIteratorIterator(
+            //     new RecursiveArrayIterator($data),
+            //     RecursiveIteratorIterator::SELF_FIRST
+            // );
+            // foreach ($iterator as $key => $value) {
+                
+            // }
+        }
+        $query = "UPDATE $table SET <> WHERE id=?";
+    }else{
+        $statuscode = 400;
     }
 }else{
     $statuscode= 404;
