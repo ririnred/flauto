@@ -1,7 +1,7 @@
 <?php
-ini_set("display_errors", 1);
-error_reporting(E_ALL);
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+// ini_set("display_errors", 1);
+// error_reporting(E_ALL);
+// mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 //------------------- schema -----------------------------
 /*
     CREATE TABLE `persona` (
@@ -46,6 +46,42 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
             restituisce l'elenco di tutte le tessere
         -se content=popolarita_sedi
             restituisce l'elenco delle sedi con il numero totale di tessere mai create in tale sede ed il totale di tessere create per ogni mese se ce ne sono state
+    -PATCH | PUT:
+        es di formattazione richiesta in json:
+            HEADERS: 
+                [...] 
+                Content-Type: application/json  
+
+            BODY: 
+                {
+                    "tessera": {            //nome tabella dell'elemento da modificare
+                        "id": 11,           //id della riga da modificare
+                        "punti": 1223       //campi da modificare con nuovo valore 
+                    },
+                    "persona":{
+                        "id": 1,
+                        "nome":"Antonio"
+                    }
+                    // ...  il numero degli elementi da modificare può andare da 0 a N
+                }
+        
+        es in XML 
+            HEADERS: 
+                [...] 
+                Content-Type: application/xml  
+            BODY:
+            <root>                              //elemento radice che funge da contenitore (può essere qualsiasi cosa)
+                <persona>                       //nome tabella dell'elemento da modificare
+                    <id>2</id>                  //id della riga da modificare
+                    <nome>tutu</nome>           //campi da modificare con nuovo valore 
+                    <cognome>Verdi</cognome>
+                </persona>
+                <tessera>
+                    <id>2</id>
+                    <punti>33</punti>
+                </tessera>
+                // ...  il numero degli elementi da modificare può andare da 0 a N
+            </root>
 */
 //END ------------------- DOCS -----------------------------
 
@@ -580,7 +616,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
 } else if ($_SERVER["REQUEST_METHOD"] == "PATCH" || $_SERVER["REQUEST_METHOD"] == "PUT") {
     $input= file_get_contents("php://input");
 
-    $content_type= $_SERVER['HTTP_CONTENT_TYPE'];
+    $content_type= $_SERVER['CONTENT_TYPE'];
 
     if ($content_type == "application/json") {
         $input = json_decode($input, false);
@@ -591,22 +627,31 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
     } else {
         $statuscode = 400;
     }
-    $table=array_keys($input)[0];
-    if($table=='persona' || $table=='sede' || $table=='tessera'){
-        $id= intval($input->{$table}->id);
-        if($id>-1){
-            // $iterator = new RecursiveIteratorIterator(
-            //     new RecursiveArrayIterator($data),
-            //     RecursiveIteratorIterator::SELF_FIRST
-            // );
-            // foreach ($iterator as $key => $value) {
-                
-            // }
+
+    foreach ($input as $table => $values) {
+        if($table=='persona' || $table=='sede' || $table=='tessera'){
+            $params=[];
+            foreach ($input->{$table} as $key => $value) {
+                if($key=="id"){
+                    $id=intval($value) ?? -1;
+                }else{
+                    $params[]= " ". $key . " = '".$value."' ";
+                }
+            }
+            if($id>-1){
+                $params= implode(",", $params);
+                $query = "UPDATE $table SET $params WHERE id=$id"; 
+                if($conn->query($query)===false){
+                    $statuscode= 500;
+                }
+            }else{
+                $statuscode= 400;
+            }
+        }else{
+            $statuscode= 400;
         }
-        $query = "UPDATE $table SET <> WHERE id=?";
-    }else{
-        $statuscode = 400;
-    }
+    } 
+    
 }else{
     $statuscode= 404;
 }
