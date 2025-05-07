@@ -10,7 +10,7 @@ class PopolaritaSedi{
       required this.nome,
       required this.indirizzo,
       required this.tessereStatistiche,
-    });
+  });
 
   PopolaritaSedi.fromJson(Map<String, dynamic> json)
     : nome = json['nome'] as String,
