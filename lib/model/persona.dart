@@ -1,25 +1,30 @@
 import 'package:json_annotation/json_annotation.dart';
 
-part 'persona.g.dart';
-
 @JsonSerializable()
-class Persona{
+class Persona {
   int? id;
   String nome;
   String cognome;
   String mail;
 
+  Persona({
+    this.id,
+    required this.nome,
+    required this.cognome,
+    required this.mail,
+  });
 
-  Persona(
-    {
-      this.id,
-      required this.nome,
-      required this.cognome,
-      required this.mail,
-    }
-  );
+  factory Persona.fromJson(Map<String, dynamic> json) => Persona(
+        id: (json['id'] as num?)?.toInt(),
+        nome: json['nome'] as String,
+        cognome: json['cognome'] as String,
+        mail: json['mail'] as String,
+      );
 
-  factory Persona.fromJson(Map<String, dynamic> json) => _$PersonaFromJson(json); 
-
-  Map<String, dynamic> toJson() => _$PersonaToJson(this);
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'nome': nome,
+        'cognome': cognome,
+        'mail': mail,
+      };
 }

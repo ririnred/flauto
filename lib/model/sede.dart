@@ -1,23 +1,26 @@
 import 'package:json_annotation/json_annotation.dart';
 
-part 'sede.g.dart';
-
 @JsonSerializable()
-class Sede{
+class Sede {
   int? id;
   String nome;
   String idirizzo;
 
+  Sede({
+    this.id,
+    required this.nome,
+    required this.idirizzo,
+  });
 
-  Sede(
-    {
-      this.id,
-      required this.nome,
-      required this.idirizzo,
-    }
-  );
+  factory Sede.fromJson(Map<String, dynamic> json) => Sede(
+        id: (json['id'] as num?)?.toInt(),
+        nome: json['nome'] as String,
+        idirizzo: json['idirizzo'] as String,
+      );
 
-  factory Sede.fromJson(Map<String, dynamic> json) => _$SedeFromJson(json); 
-
-  Map<String, dynamic> toJson() => _$SedeToJson(this);
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'nome': nome,
+        'idirizzo': idirizzo,
+      };
 }

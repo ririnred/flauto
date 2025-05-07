@@ -1,14 +1,10 @@
 import 'package:json_annotation/json_annotation.dart';
 
-part 'popolaritaSedi.g.dart';
-
 @JsonSerializable()
 class PopolaritaSedi{
   String nome;
   String indirizzo;
   Map<String, dynamic> tessereStatistiche;
-
-
 
   PopolaritaSedi(
     {
@@ -18,7 +14,15 @@ class PopolaritaSedi{
     }
   );
 
-  factory PopolaritaSedi.fromJson(Map<String, dynamic> json) => _$PopolaritaSediFromJson(json); 
-
-  Map<String, dynamic> toJson() => _$PopolaritaSediToJson(this);
+  factory PopolaritaSedi.fromJson(Map<String, dynamic> json) => PopolaritaSedi(
+        nome : json['nome'] as String,
+        indirizzo : json['indirizzo'] as String,
+        tessereStatistiche : json['tessereStatistiche'] as Map<String, dynamic>? ?? {},
+      );
+      
+  Map<String, dynamic> toJson() => {
+      'nome': nome, 
+      'indirizzo': indirizzo, 
+      'tessereStatistiche': tessereStatistiche
+    };
 }
