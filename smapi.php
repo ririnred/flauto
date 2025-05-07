@@ -58,7 +58,7 @@
                         "id": 11,           //id della riga da modificare
                         "punti": 1223       //campi da modificare con nuovo valore 
                     },
-                    "persona":{
+                    "persona":{             //secondo elemento da modificare
                         "id": 1,
                         "nome":"Antonio"
                     }
@@ -76,7 +76,7 @@
                     <nome>tutu</nome>           //campi da modificare con nuovo valore 
                     <cognome>Verdi</cognome>
                 </persona>
-                <tessera>
+                <tessera>                       //secondo elemento da modificare
                     <id>2</id>
                     <punti>33</punti>
                 </tessera>
@@ -631,7 +631,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
     foreach ($input as $table => $values) {
         if($table=='persona' || $table=='sede' || $table=='tessera'){
             $params=[];
-            foreach ($input->{$table} as $key => $value) {
+            foreach ($values as $key => $value) {
                 if($key=="id"){
                     $id=intval($value) ?? -1;
                 }else{
