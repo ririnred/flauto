@@ -12,11 +12,11 @@ class Sede {
     required this.idirizzo,
   });
 
-  factory Sede.fromJson(Map<String, dynamic> json) => Sede(
-        id: (json['id'] as num?)?.toInt(),
-        nome: json['nome'] as String,
-        idirizzo: json['idirizzo'] as String,
-      );
+  Sede.fromJson(Map<String, dynamic> json) :
+        id = (json['id'] as num?)?.toInt(),
+        nome = json['nome'] as String,
+        idirizzo = json['idirizzo'] as String;
+      
 
   Map<String, dynamic> toJson() => {
         'id': id,

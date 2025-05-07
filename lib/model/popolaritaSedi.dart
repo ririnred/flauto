@@ -6,20 +6,17 @@ class PopolaritaSedi{
   String indirizzo;
   Map<String, dynamic> tessereStatistiche;
 
-  PopolaritaSedi(
-    {
+  PopolaritaSedi({
       required this.nome,
       required this.indirizzo,
       required this.tessereStatistiche,
-    }
-  );
+    });
 
-  factory PopolaritaSedi.fromJson(Map<String, dynamic> json) => PopolaritaSedi(
-        nome : json['nome'] as String,
-        indirizzo : json['indirizzo'] as String,
-        tessereStatistiche : json['tessereStatistiche'] as Map<String, dynamic>? ?? {},
-      );
-      
+  PopolaritaSedi.fromJson(Map<String, dynamic> json)
+    : nome = json['nome'] as String,
+      indirizzo = json['indirizzo'] as String,
+      tessereStatistiche = json['tessereStatistiche'] as Map<String, dynamic>? ?? {};
+
   Map<String, dynamic> toJson() => {
       'nome': nome, 
       'indirizzo': indirizzo, 

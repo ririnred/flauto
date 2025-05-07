@@ -14,12 +14,11 @@ class Persona {
     required this.mail,
   });
 
-  factory Persona.fromJson(Map<String, dynamic> json) => Persona(
-        id: (json['id'] as num?)?.toInt(),
-        nome: json['nome'] as String,
-        cognome: json['cognome'] as String,
-        mail: json['mail'] as String,
-      );
+  Persona.fromJson(Map<String, dynamic> json) :
+    id = (json['id'] as num?)?.toInt(),
+    nome = json['nome'] as String,
+    cognome = json['cognome'] as String,
+    mail = json['mail'] as String;
 
   Map<String, dynamic> toJson() => {
         'id': id,

@@ -16,13 +16,13 @@ class Tessera {
     required this.dataCreazione,
   });
 
-  factory Tessera.fromJson(Map<String, dynamic> json) => Tessera(
-        id: (json['id'] as num?)?.toInt(),
-        sedeId: json['sedeId'] as int,
-        punti: json['punti'] as int,
-        clienteId: json['clienteId'] as int,
-        dataCreazione: DateTime.parse(json['dataCreazione'] as String),
-      );
+  Tessera.fromJson(Map<String, dynamic> json) :
+    id = (json['id'] as num?)?.toInt(),
+    sedeId = json['sedeId'] as int,
+    punti = json['punti'] as int,
+    clienteId = json['clienteId'] as int,
+    dataCreazione = DateTime.parse(json['dataCreazione'] as String);
+    
 
   Map<String, dynamic> toJson() => {
         'id': id,
