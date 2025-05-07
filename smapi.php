@@ -614,13 +614,14 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
             break;
     }
 } else if ($_SERVER["REQUEST_METHOD"] == "PATCH" || $_SERVER["REQUEST_METHOD"] == "PUT") {
-    $input= file_get_contents("php://input");
+    $input= file_get_contents("php://input"); //prendo il body della richiesta HTTP
 
-    $content_type= $_SERVER['CONTENT_TYPE'];
+    $content_type= $_SERVER['CONTENT_TYPE']; //prendo il tipo di contenuto passato dall'header HTTP Content-Type
 
     if ($content_type == "application/json") {
-        $input = json_decode($input, false);
+        $input = json_decode($input, false); //trasformo la stringa json in un oggetto standard
     } else if ($content_type == "application/xml") {
+        //trasformo la string xml in un oggetto standard in modo da standardificare il processo di elaborazione dei dati
         $input = simplexml_load_string($input);
         $input = json_encode($input);
         $input = json_decode($input, false);
@@ -628,27 +629,27 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
         $statuscode = 400;
     }
 
-    foreach ($input as $table => $values) {
-        if($table=='persona' || $table=='sede' || $table=='tessera'){
-            $params=[];
-            foreach ($values as $key => $value) {
+    foreach ($input as $table => $values) { //scorro il body tra gli elementi da modificare  
+        if($table=='persona' || $table=='sede' || $table=='tessera'){ //tabelle accettate
+            $params=[]; //array che per ogni cella ha una stringa "colonna = nuovo_valore"   
+            foreach ($values as $key => $value) { //scorro tra gli attributi di un singolo elemento
                 if($key=="id"){
-                    $id=intval($value) ?? -1;
+                    $id=intval($value) ?? -1; //prendo l'id della riga da modificare
                 }else{
-                    $params[]= " ". $key . " = '".$value."' ";
+                    $params[]= " ". $key . " = '".$value."' "; //"colonna = nuovo_valore"
                 }
             }
-            if($id>-1){
-                $params= implode(",", $params);
-                $query = "UPDATE $table SET $params WHERE id=$id"; 
-                if($conn->query($query)===false){
+            if($id>-1){ //se è un id valido
+                $params= implode(",", $params); //unisco con una virgola le singole assegnazioni colonna=val in una singola stringa (es "colonna=val, colonna=val, colonna=val")
+                $query = "UPDATE $table SET $params WHERE id=$id"; //modifico il singolo elemento identificato da un id e con i parametri dati
+                if($conn->query($query)===false){ //se la query da errore ritorno Internal Server Error
                     $statuscode= 500;
                 }
             }else{
-                $statuscode= 400;
+                $statuscode= 400; //se l'id è non valido ritorno Bad Request
             }
         }else{
-            $statuscode= 400;
+            $statuscode= 400; //se mi chiede di modificare una tabella non valida ritorno Bad Request
         }
     } 
     
