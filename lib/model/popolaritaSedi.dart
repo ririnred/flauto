@@ -6,6 +6,7 @@ part 'popolaritaSedi.g.dart';
 class PopolaritaSedi{
   String nome;
   String indirizzo;
+  Map<String, dynamic> tessereStatistiche;
 
 
 
@@ -13,6 +14,7 @@ class PopolaritaSedi{
     {
       required this.nome,
       required this.indirizzo,
+      required this.tessereStatistiche,
     }
   );
 
