@@ -1,88 +1,287 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart' as xml;
+
 import '/model/persona.dart';
 import '/model/sede.dart';
 import '/model/tessera.dart';
-import '/model/popolarita_sedi.dart';
 
-class api_controller {
-  static Future<dynamic> handleResponse({
-    required http.Response response,
-    required String contentKey,
-    required String rootElement,
-    required dynamic Function(Map<String, dynamic>) fromJson,
-    required dynamic Function(xml.XmlElement) fromXml,
-  }) async {
-    final contentType = response.headers['content-type'];
-    
-    if (contentType?.contains('application/json') == true) {
-      return _handleJsonResponse(response, contentKey, fromJson);
-    } else if (contentType?.contains('application/xml') == true) {
-      return _handleXmlResponse(response, rootElement, fromXml);
-    } else {
-      throw FormatException('Formato risposta non supportato: $contentType');
+class apiController {
+  final String baseUrl;
+
+  apiController({required this.baseUrl});
+
+  /// ricevi una lista di persone con alcuni filtri (XML/JSON)
+  Future<List<Persona>> getClienti({String responseType = 'json'}) async {
+    final uri = Uri.parse('$baseUrl?op=read&content=clienti&response_type=$responseType');
+    final res = await http.get(uri);
+    if (res.statusCode == 200) {
+      if (responseType.toLowerCase() == 'xml') {
+        final document = xml.XmlDocument.parse(res.body);
+        return document
+            .findAllElements('cliente')
+            .map((node) => Persona(
+                  id: int.parse(node.getAttribute('id')!),
+                  nome: node.findElements('nome').single.text,
+                  cognome: node.findElements('cognome').single.text,
+                  mail: node.findElements('mail').single.text,
+                ))
+            .toList();
+      } else {
+        final data = json.decode(res.body);
+        final list = data['clienti_tesserati'] as List<dynamic>;
+        return list
+            .map((item) => Persona.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+    } else if (res.statusCode == 204) {
+      return [];
     }
+    throw Exception('Failed to get clienti: \${res.statusCode}');
   }
 
-  static dynamic _handleJsonResponse(
-    http.Response response,
-    String contentKey,
-    Function fromJson,
-  ) {
-    final jsonData = json.decode(response.body);
-    final content = jsonData[contentKey] as List;
-    
-    return content.map((item) => fromJson(item)).toList();
+  /// ricevi una lista di sedi con alcuni filtri
+  Future<List<Sede>> getSedi({
+    String responseType = 'json',
+    String? nome,
+    String? indirizzo,
+  }) async {
+    final params = <String, String>{
+      'op': 'read',
+      'content': 'sedi',
+      'response_type': responseType,
+    };
+    if (nome != null && nome.isNotEmpty) params['nome'] = nome;
+    if (indirizzo != null && indirizzo.isNotEmpty) params['indirizzo'] = indirizzo;
+
+    final uri = Uri.parse(baseUrl).replace(queryParameters: params);
+    final res = await http.get(uri);
+    if (res.statusCode == 200) {
+      if (responseType.toLowerCase() == 'xml') {
+        final document = xml.XmlDocument.parse(res.body);
+        return document
+            .findAllElements('sede')
+            .map((node) => Sede(
+                  id: node.getAttribute('id') != null ? int.parse(node.getAttribute('id')!) : null,
+                  nome: node.findElements('nome').single.text,
+                  idirizzo: node.findElements('indirizzo').single.text,
+                ))
+            .toList();
+      } else {
+        final data = json.decode(res.body);
+        final list = data['sedi'] as List<dynamic>;
+        return list
+            .map((item) => Sede.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+    } else if (res.statusCode == 204) {
+      return [];
+    }
+    throw Exception('Failed to get sedi: \${res.statusCode}');
   }
 
-  static dynamic _handleXmlResponse(
-    http.Response response,
-    String rootElement,
-    Function fromXml,
-  ) {
-    final document = xml.XmlDocument.parse(response.body);
-    final root = document.findElements(rootElement).first;
-    
-    return root.childElements
-        .map((element) => fromXml(element))
-        .toList();
+  /// ricevi una lista di tessere con alcuni filtri
+  Future<List<Tessera>> getTessere({
+    String responseType = 'json',
+    String? nome,
+    String? cognome,
+  }) async {
+    final params = <String, String>{
+      'op': 'read',
+      'content': 'tessere',
+      'response_type': responseType,
+    };
+    if (nome != null && nome.isNotEmpty) params['nome'] = nome;
+    if (cognome != null && cognome.isNotEmpty) params['cognome'] = cognome;
+
+    final uri = Uri.parse(baseUrl).replace(queryParameters: params);
+    final res = await http.get(uri);
+    if (res.statusCode == 200) {
+      if (responseType.toLowerCase() == 'xml') {
+        final document = xml.XmlDocument.parse(res.body);
+        return document
+            .findAllElements('tessera')
+            .map((node) {
+              final cliente = node.findElements('cliente').single;
+              return Tessera(
+                id: int.parse(node.getAttribute('numero_tessera')!),
+                punti: int.parse(node.findElements('punti').single.text),
+                dataCreazione: DateTime.parse(node.findElements('data_di_creazione').single.text),
+                sedeId: -1, // parsing sedeDiCreazione name/address not mapped
+                clienteId: int.parse(cliente.getAttribute('id')!),
+              );
+            })
+            .toList();
+      } else {
+        final data = json.decode(res.body);
+        final list = data['tessere'] as List<dynamic>;
+        return list
+            .map((item) => Tessera.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+    } else if (res.statusCode == 204) {
+      return [];
+    }
+    throw Exception('Failed to get tessere: \${res.statusCode}');
   }
 
-  // Metodi specifici per ogni endpoint
-  Future<List<Persona>> getClienti(http.Response response) => 
-    handleResponse(
-      response: response,
-      contentKey: 'clienti_tesserati',
-      rootElement: 'clienti_tesserati',
-      fromJson: (json) => Persona.fromJson(json),
-      fromXml: (xml) => Persona.fromXml(xml),
-    ) as Future<List<Persona>>;
+  /// ricevi una lista dynamica della popolarita delle sedi con alcuni filtri
+  Future<List<dynamic>> getPopolaritaSedi({
+    String responseType = 'json',
+    String? nome,
+    String? indirizzo,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    final params = <String, String>{
+      'op': 'read',
+      'content': 'popolarita_sedi',
+      'response_type': responseType,
+    };
+    if (nome != null && nome.isNotEmpty) params['nome'] = nome;
+    if (indirizzo != null && indirizzo.isNotEmpty) params['indirizzo'] = indirizzo;
+    if (startDate != null) params['start_date'] = startDate.toIso8601String().substring(0, 10);
+    if (endDate != null) params['end_date'] = endDate.toIso8601String().substring(0, 10);
 
-  Future<List<Tessera>> getTessere(http.Response response) => 
-    handleResponse(
-      response: response,
-      contentKey: 'tessere',
-      rootElement: 'tessere',
-      fromJson: (json) => Tessera.fromJson(json),
-      fromXml: (xml) => Tessera.fromXml(xml),
-    ) as Future<List<Tessera>>;
+    final uri = Uri.parse(baseUrl).replace(queryParameters: params);
+    final res = await http.get(uri);
+    if (res.statusCode == 200) {
+      if (responseType.toLowerCase() == 'xml') {
+        final document = xml.XmlDocument.parse(res.body);
+        // return il Documento XML
+        return document.findAllElements('sede').map((node) {
+          final periods = node.findElements('periodo').map((p) => {
+            'mese': p.getAttribute('mese'),
+            'n_tessere_create': int.parse(p.getAttribute('n_tessere_create')!),
+          }).toList();
+          return {
+            'nome': node.getAttribute('nome'),
+            'indirizzo': node.getAttribute('indirizzo'),
+            'n_tot_di_tessere_create': int.parse(node.getAttribute('n_tot_di_tessere_create')!),
+            'mesi': periods,
+          };
+        }).toList();
+      } else {
+        final data = json.decode(res.body);
+        return data['sedi'] as List<dynamic>;
+      }
+    } else if (res.statusCode == 204) {
+      return [];
+    }
+    throw Exception('Failed to get popolarita_sedi: \${res.statusCode}');
+  }
 
-    Future<List<Sede>> getSedi(http.Response response) => 
-    handleResponse(
-      response: response,
-      contentKey: 'sedi',
-      rootElement: 'sedi',
-      fromJson: (json) => Sede.fromJson(json),
-      fromXml: (xml) => Sede.fromXml(xml),
-    ) as Future<List<Sede>>;
 
-    Future<List<PopolaritaSedi>> getPopolaritaSedi(http.Response response) => 
-    handleResponse(
-      response: response,
-      contentKey: 'popolarita_sedi',
-      rootElement: 'popolarita_sedi',
-      fromJson: (json) => PopolaritaSedi.fromJson(json),
-      fromXml: (xml) => PopolaritaSedi.fromXml(xml),
-    ) as Future<List<PopolaritaSedi>>;
+  /// Crea un nuovo cliente con tessera associata
+Future<bool> creaClienteTessera({
+  required String nome,
+  required String cognome,
+  required String mail,
+  required int sedeId,
+}) async {
+  final uri = Uri.parse('$baseUrl/crea_clientetessera');
+  
+  final response = await http.post(
+    uri,
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: {
+      'nome': nome,
+      'cognome': cognome,
+      'mail': mail,
+      'sede_id': sedeId.toString(),
+    },
+  );
+
+  if (response.statusCode == 200) {
+    return true; // Successo
+  } else if (response.statusCode == 400) {
+    throw Exception('Dati mancanti o non validi');
+  } else if (response.statusCode == 500) {
+    throw Exception('Errore interno del server');
+  } else {
+    throw Exception('Errore sconosciuto: ${response.statusCode}');
+  }
+}
+
+Future<Sede> createSede(Sede sede) async {
+  final uri = Uri.parse(baseUrl);
+  final body = {
+    'op': 'create',
+    'content': 'sedi',
+    ...sede.toJson(),
+  };
+  final res = await http.post(uri, body: json.encode(body), headers: {'Content-Type': 'application/json'});
+  if (res.statusCode == 201) {
+    return Sede.fromJson(json.decode(res.body));
+  }
+  throw Exception('Failed to create sede: \${res.statusCode}');
+}
+
+  // === UPDATE ===
+Future<Persona> updatePersona(Persona persona) async {
+  final uri = Uri.parse(baseUrl);
+  final body = {
+    'op': 'update',
+    'content': 'clienti',
+    ...persona.toJson(),
+  };
+  final res = await http.put(uri, body: json.encode(body), headers: {'Content-Type': 'application/json'});
+  if (res.statusCode == 200) {
+    return Persona.fromJson(json.decode(res.body));
+  }
+  throw Exception('Failed to update persona: \${res.statusCode}');
+}
+
+Future<Sede> updateSede(Sede sede) async {
+  final uri = Uri.parse(baseUrl);
+  final body = {
+    'op': 'update',
+    'content': 'sedi',
+    ...sede.toJson(),
+  };
+  final res = await http.put(uri, body: json.encode(body), headers: {'Content-Type': 'application/json'});
+  if (res.statusCode == 200) {
+    return Sede.fromJson(json.decode(res.body));
+  }
+  throw Exception('Failed to update sede: \${res.statusCode}');
+}
+
+Future<Tessera> updateTessera(Tessera tessera) async {
+  final uri = Uri.parse(baseUrl);
+  final body = {
+    'op': 'update',
+    'content': 'tessere',
+    ...tessera.toJson(),
+  };
+  final res = await http.put(uri, body: json.encode(body), headers: {'Content-Type': 'application/json'});
+  if (res.statusCode == 200) {
+    return Tessera.fromJson(json.decode(res.body));
+  }
+  throw Exception('Failed to update tessera: \${res.statusCode}');
+}
+
+  // === DELETE ===
+Future<void> deletePersona(int id) async {
+  final uri = Uri.parse('$baseUrl?op=delete&content=clienti&id=\$id');
+  final res = await http.delete(uri);
+  if (res.statusCode != 204) {
+    throw Exception('Failed to delete persona: \${res.statusCode}');
+  }
+}
+
+Future<void> deleteSede(int id) async {
+  final uri = Uri.parse('$baseUrl?op=delete&content=sedi&id=\$id');
+  final res = await http.delete(uri);
+  if (res.statusCode != 204) {
+    throw Exception('Failed to delete sede: \${res.statusCode}');
+  }
+}
+
+Future<void> deleteTessera(int id) async {
+  final uri = Uri.parse('$baseUrl?op=delete&content=tessere&id=\$id');
+  final res = await http.delete(uri);
+  if (res.statusCode != 204) {
+    throw Exception('Failed to delete tessera: \${res.statusCode}');
+  }
+}
 }
