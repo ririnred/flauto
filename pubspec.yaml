@@ -12,6 +12,7 @@ dependencies:
   
   http: ^1.1.0
   json_annotation: ^4.9.0
+  xml: ^6.5.0
 
 dependencies_override:
   logging: 1.1.1
