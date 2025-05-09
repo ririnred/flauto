@@ -36,7 +36,7 @@ class _GestioneClienteState extends State<GestioneCliente> {
     });
   }
 
-  Future<void> _loadClienti() async {
+  Future<void> loadClienti() async {
     try {
       setState(() => _isLoading = true);
       _clientiFuture = widget.apiController.getClienti();
