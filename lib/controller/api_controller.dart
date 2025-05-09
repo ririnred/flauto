@@ -6,10 +6,10 @@ import '/model/persona.dart';
 import '/model/sede.dart';
 import '/model/tessera.dart';
 
-class apiController {
+class ApiController {
   final String baseUrl;
 
-  apiController({required this.baseUrl});
+  ApiController({required this.baseUrl});
 
   /// ricevi una lista di persone con alcuni filtri (XML/JSON)
   Future<List<Persona>> getClienti({String responseType = 'json'}) async {
