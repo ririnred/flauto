@@ -4,24 +4,24 @@ import 'package:xml/xml.dart' as xml;
 @JsonSerializable()
 class Tessera {
   int? id;
-  int sedeId;
+  int? sedeId;
   int punti;
-  int clienteId;
+  int? clienteId;
   DateTime dataCreazione;
 
   Tessera({
     this.id,
-    required this.sedeId,
+    this.sedeId,
     required this.punti,
-    required this.clienteId,
+    this.clienteId,
     required this.dataCreazione,
   });
 
   Tessera.fromJson(Map<String, dynamic> json) :
-    id = (json['id'] as num?)?.toInt(),
-    sedeId = json['sedeId'] as int,
+    id = json['id'] as int?,
+    sedeId = json['sedeId'] as int?,
     punti = json['punti'] as int,
-    clienteId = json['clienteId'] as int,
+    clienteId = json['clienteId'] as int?,
     dataCreazione = DateTime.parse(json['dataCreazione'] as String);
 
   factory Tessera.fromXml(xml.XmlElement xmlElement) {

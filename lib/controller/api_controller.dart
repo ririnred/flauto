@@ -86,46 +86,51 @@ class ApiController {
 
   /// ricevi una lista di tessere con alcuni filtri
   Future<List<Tessera>> getTessere({
-    String responseType = 'json',
-    String? nome,
-    String? cognome,
-  }) async {
-    final params = <String, String>{
-      'op': 'read',
-      'content': 'tessere',
-      'response': responseType,
-    };
-    if (nome != null && nome.isNotEmpty) params['nome'] = nome;
-    if (cognome != null && cognome.isNotEmpty) params['cognome'] = cognome;
+  String responseType = 'json',
+  String? nome,
+  String? cognome,
+}) async {
+  final params = <String, String>{
+    'content': 'tessere', // Specifica il tipo di contenuto richiesto
+    'response': responseType, // Formato di risposta (JSON/XML)
+  };
 
-    final uri = Uri.parse(baseUrl).replace(queryParameters: params);
-    final res = await http.get(uri);
-    if (res.statusCode == 200) {
-      if (responseType.toLowerCase() == 'xml') {
-        final document = xml.XmlDocument.parse(res.body);
-        return document.findAllElements('tessera').map((node) {
-          final cliente = node.findElements('cliente').single;
-          return Tessera(
-            id: int.parse(node.getAttribute('numero_tessera')!),
-            punti: int.parse(node.findElements('punti').single.text),
-            dataCreazione: DateTime.parse(
-                node.findElements('data_di_creazione').single.text),
-            sedeId: -1, // parsing sedeDiCreazione name/address not mapped
-            clienteId: int.parse(cliente.getAttribute('id')!),
-          );
-        }).toList();
-      } else {
-        final data = json.decode(res.body);
-        final list = data['tessere'] as List<dynamic>;
-        return list
-            .map((item) => Tessera.fromJson(item as Map<String, dynamic>))
-            .toList();
-      }
-    } else if (res.statusCode == 204) {
-      return [];
+  // Aggiungi filtri opzionali se presenti
+  if (nome != null && nome.isNotEmpty) params['nome'] = nome;
+  if (cognome != null && cognome.isNotEmpty) params['cognome'] = cognome;
+
+  // Costruisce l'URI corretto
+  final uri = Uri.parse('${baseUrl}read').replace(queryParameters: params);
+  
+  final res = await http.get(uri);
+  
+  if (res.statusCode == 200) {
+    if (responseType.toLowerCase() == 'xml') {
+      // Parsing XML
+      final document = xml.XmlDocument.parse(res.body);
+      return document.findAllElements('tessera').map((node) {
+        final cliente = node.findElements('cliente').single;
+        return Tessera(
+          id: int.parse(node.getAttribute('numero_tessera') ?? '0'), // Usa '0' come fallback
+          punti: int.parse(node.findElements('punti').single.text),
+          dataCreazione: DateTime.parse(node.findElements('data_di_creazione').single.text),
+          sedeId: int.tryParse(node.getAttribute('sede_creazione_id') ?? ''), // Estrai da XML
+          clienteId: int.parse(cliente.getAttribute('id') ?? '0'),
+        );
+      }).toList();
+    } else {
+      // Parsing JSON
+      final data = json.decode(res.body);
+      final list = data['tessere'] as List<dynamic>;
+      return list
+          .map((item) => Tessera.fromJson(item as Map<String, dynamic>))
+          .toList();
     }
-    throw Exception('Failed to get tessere: ${res.statusCode}');
+  } else if (res.statusCode == 204) {
+    return []; // Nessun contenuto disponibile
   }
+  throw Exception('Failed to get tessere: ${res.statusCode}');
+}
 
   /// ricevi una lista dynamica della popolarita delle sedi con alcuni filtri
   Future<List<dynamic>> getPopolaritaSedi({
