@@ -21,7 +21,7 @@ class _GestioneTessereState extends State<GestioneTessere> {
   }
 
   void refreshData() {
-    setState(() => _tessereFuture = widget.apiController.getTessere());
+    _tessereFuture = widget.apiController.getTessere();
   }
 
   @override
