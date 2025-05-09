@@ -221,6 +221,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                                 // aggiunta di un elemento figlio alla radice
                                 $child = $xml->addChild("sede");
 
+                                $child->addAttribute("id", $record["id"]);
                                 // aggiunta di attributi ed elementi all'elemento figlio
                                 $child->addChild("nome", $record["nome"]);
                                 $child->addChild(
@@ -241,6 +242,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
 
                                 //singolo elemento con i suoi attributi
                                 $json->sedi[$i] = (object) [
+                                    "id" => $record["id"],
                                     "nome" => $record["nome"],
                                     "indirizzo" => $record["indirizzo"],
                                 ];
@@ -694,7 +696,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
     $_SERVER["REQUEST_METHOD"] == "PUT"
 ) {
     $input = file_get_contents("php://input"); //prendo il body della richiesta HTTP
-
     $content_type = $_SERVER["CONTENT_TYPE"]; //prendo il tipo di contenuto passato dall'header HTTP Content-Type
 
     if ($content_type == "application/json") {
@@ -705,7 +706,11 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
         $input = json_encode($input);
         $input = json_decode($input, false);
     } else {
-        $statuscode = 400;
+        $input = json_decode($input, false);
+
+        if ($input === null) {
+            $statuscode = 404;
+        }
     }
 
     foreach ($input as $table => $values) {
@@ -728,6 +733,8 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                 if ($conn->query($query) === false) {
                     //se la query da errore ritorno Internal Server Error
                     $statuscode = 500;
+                } else {
+                    $statuscode = 200;
                 }
             } else {
                 $statuscode = 400; //se l'id è non valido ritorno Bad Request
@@ -741,6 +748,5 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
 }
 
 http_response_code($statuscode); //invio lo status code della risposta
-
 $conn->close();
 ?>

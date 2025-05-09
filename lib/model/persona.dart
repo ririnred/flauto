@@ -15,11 +15,11 @@ class Persona {
     required this.mail,
   });
 
-  Persona.fromJson(Map<String, dynamic> json) :
-    id = (json['id'] as num?)?.toInt(),
-    nome = json['nome'] as String,
-    cognome = json['cognome'] as String,
-    mail = json['mail'] as String;
+  Persona.fromJson(Map<String, dynamic> json)
+      : id = (json['id'] as num?)?.toInt(),
+        nome = json['nome'] as String,
+        cognome = json['cognome'] as String,
+        mail = json['mail'] as String;
 
   factory Persona.fromXml(xml.XmlElement xmlElement) {
     return Persona(
