@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import '../controller/api_controller.dart';
 import '../model/sede.dart';
 
-
 class GestioneSedi extends StatefulWidget {
   final ApiController apiController;
-  
+
   const GestioneSedi({super.key, required this.apiController});
 
   @override
@@ -151,13 +150,15 @@ class _GestioneSediState extends State<GestioneSedi> {
                     nome: nomeController.text,
                     indirizzo: indirizzoController.text,
                   );
-                  
+
                   if (sede == null) {
-                    await widget.apiController.createSede(newSede);
+                    await widget.apiController.createSede(
+                        nome: nomeController.text,
+                        indirizzo: indirizzoController.text);
                   } else {
                     await widget.apiController.updateSede(newSede);
                   }
-                  
+
                   refreshData();
                   Navigator.pop(context);
                 } catch (e) {

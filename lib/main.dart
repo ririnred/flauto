@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/view/gestione_sedi.dart';
 import '/view/home.dart';
 import '/view/gestione_cliente.dart';
 import '/view/gestione_popolarita_sedi.dart';
@@ -6,7 +7,9 @@ import '/view/gestione_tessere.dart';
 import 'controller/api_controller.dart';
 
 void main() {
-  runApp(const MainApp(apiController: ApiController(baseUrl: "/")));
+  runApp(const MainApp(
+      apiController: ApiController(
+          baseUrl: "http://localhost/scientology_market/smapi.php/")));
 }
 
 class MainApp extends StatelessWidget {
@@ -22,6 +25,8 @@ class MainApp extends StatelessWidget {
         '/': (context) => Home(),
         '/gestione_clienti': (context) =>
             GestioneCliente(apiController: apiController),
+        '/gestione_sedi': (context) =>
+            GestioneSedi(apiController: apiController),
         // Add other routes here
         '/gestione_popolarita_sedi': (context) =>
             GestionePopolaritaSedi(apiController: apiController),
