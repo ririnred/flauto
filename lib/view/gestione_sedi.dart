@@ -22,7 +22,7 @@ class _GestioneSediState extends State<GestioneSedi> {
   }
 
   void refreshData() {
-    setState(() => _sediFuture = widget.apiController.getSedi());
+    _sediFuture = widget.apiController.getSedi();
   }
 
   @override
