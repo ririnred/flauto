@@ -11,6 +11,10 @@ class ApiController {
 
   ApiController({required this.baseUrl});
 
+
+
+  
+
   /// ricevi una lista di persone con alcuni filtri (XML/JSON)
   Future<List<Persona>> getClienti({String responseType = 'json'}) async {
     final uri = Uri.parse('$baseUrl?op=read&content=clienti&response_type=$responseType');
@@ -172,6 +176,9 @@ class ApiController {
   }
 
 
+
+
+
   /// Crea un nuovo cliente con tessera associata
 Future<bool> creaClienteTessera({
   required String nome,
@@ -217,6 +224,10 @@ Future<Sede> createSede(Sede sede) async {
   throw Exception('Failed to create sede: \${res.statusCode}');
 }
 
+
+
+
+
   // === UPDATE ===
 Future<Persona> updatePersona(Persona persona) async {
   final uri = Uri.parse(baseUrl);
@@ -259,6 +270,11 @@ Future<Tessera> updateTessera(Tessera tessera) async {
   }
   throw Exception('Failed to update tessera: \${res.statusCode}');
 }
+
+
+
+
+
 
   // === DELETE ===
 Future<void> deletePersona(int id) async {
