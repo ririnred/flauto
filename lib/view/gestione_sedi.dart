@@ -14,15 +14,32 @@ class GestioneSedi extends StatefulWidget {
 class _GestioneSediState extends State<GestioneSedi> {
   late Future<List<Sede>> _sediFuture;
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    refreshData();
+    _refreshData();
   }
 
-  void refreshData() {
-    _sediFuture = widget.apiController.getSedi();
+  void _refreshData() {
+    setState(() {
+      _sediFuture = widget.apiController.getSedi();
+      _errorMessage = null;
+    });
+  }
+
+  Future<void> loadSedi() async {
+    try {
+      setState(() => _isLoading = true);
+      _sediFuture = widget.apiController.getSedi();
+      await _sediFuture;
+    } catch (e) {
+      setState(() => _errorMessage = 'Failed to load sedi: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -33,11 +50,28 @@ class _GestioneSediState extends State<GestioneSedi> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: refreshData,
+            onPressed: _refreshData,
           ),
         ],
       ),
-      body: FutureBuilder<List<Sede>>(
+      body: _buildMainContent(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showSedeForm(),
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildMainContent() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_errorMessage != null) {
+      return Center(child: Text(_errorMessage!));
+    }
+
+    return FutureBuilder<List<Sede>>(
         future: _sediFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -59,27 +93,21 @@ class _GestioneSediState extends State<GestioneSedi> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.edit),
-                      onPressed: () => showSedeForm(sede),
+                      onPressed: () => _showSedeForm(sede),
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete),
-                      onPressed: () => deleteSede(sede.id!),
+                      onPressed: () => _deleteSede(sede.id!),
                     ),
                   ],
                 ),
               );
             },
           );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => showSedeForm(),
-        child: const Icon(Icons.add),
-      ),
-    );
+        });
   }
 
-  void deleteSede(int id) async {
+  void _deleteSede(int id) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -101,7 +129,7 @@ class _GestioneSediState extends State<GestioneSedi> {
     if (confirm == true) {
       try {
         await widget.apiController.deleteSede(id);
-        refreshData();
+        _refreshData();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString())),
@@ -110,7 +138,10 @@ class _GestioneSediState extends State<GestioneSedi> {
     }
   }
 
-  void showSedeForm([Sede? sede]) {
+  void showAddSedeDialog() => _showSedeForm();
+  void showEditSedeDialog(Sede sede) => _showSedeForm(sede);
+
+  void _showSedeForm([Sede? sede]) {
     final nomeController = TextEditingController(text: sede?.nome);
     final indirizzoController = TextEditingController(text: sede?.indirizzo);
 
@@ -159,7 +190,7 @@ class _GestioneSediState extends State<GestioneSedi> {
                     await widget.apiController.updateSede(newSede);
                   }
 
-                  refreshData();
+                  _refreshData();
                   Navigator.pop(context);
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(

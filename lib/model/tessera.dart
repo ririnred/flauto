@@ -30,16 +30,16 @@ class Tessera {
       sedeId: int.parse(xmlElement.findElements('sedeId').single.text),
       punti: int.parse(xmlElement.findElements('punti').single.text),
       clienteId: int.parse(xmlElement.findElements('clienteId').single.text),
-      dataCreazione: DateTime.parse(xmlElement.findElements('dataCreazione').single.text),
+      dataCreazione:
+          DateTime.parse(xmlElement.findElements('dataCreazione').single.text),
     );
   }
-    
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'sedeId': sedeId,
+        'sede_creazione_id': sedeId,
         'punti': punti,
-        'clienteId': clienteId,
-        'dataCreazione': dataCreazione.toIso8601String(),
+        'cliente_id': clienteId,
+        'data_creazione': dataCreazione.toIso8601String(),
       };
 }

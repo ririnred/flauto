@@ -714,6 +714,77 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                 $statuscode = 500; // (Errore interno del server)
             }
             break;
+        case "elimina_sede":
+            $id = isset($_GET["id"]) ? $_GET["id"] : null;
+
+            if ($id === null) {
+                $statuscode = 400;
+                break;
+            }
+
+            try {
+                $conn->begin_transaction();
+
+                $stmt = $conn->prepare("DELETE FROM sede WHERE id = ?");
+                $stmt->bind_param("i", $id);
+                $stmt->execute();
+
+                // Se nessuna riga è stata influenzata, il cliente non esiste
+                if ($stmt->affected_rows === 0) {
+                    $statuscode = 404;
+                    throw new Exception("Cliente non trovato con ID: $id");
+                }
+
+                if ($conn->commit()) {
+                    $statuscode = 200; // operazione ha avuto sucesso
+                } else {
+                    $conn->rollback(); // In caso di errore, annulla la transazione
+                    $statuscode = 500; //l'operazione non si è conessa corretamente
+                }
+            } catch (Exception $e) {
+                $conn->rollback(); // In caso di errore, annulla la transazione
+
+                $statuscode = 500; // (Errore interno del server)
+            }
+
+            break;
+        case "elimina_tessera":
+            // Ottieni l'ID della tessera da eliminare
+            $id = isset($_GET["id"]) ? $_GET["id"] : null;
+
+            // Se l'ID non è stato fornito, imposta il codice di stato a 400 (Richiesta non valida)
+            if ($id === null) {
+                $statuscode = 400;
+                break;
+            }
+
+            try {
+                // Inizia una transazione per garantire l'atomicità delle operazioni
+                $conn->begin_transaction();
+
+                // Elimina la tessera associata al cliente
+                $stmt = $conn->prepare("DELETE FROM tessera WHERE id = ?");
+                $stmt->bind_param("i", $id);
+                $stmt->execute();
+
+                // Se nessuna riga è stata influenzata, il cliente non esiste
+                if ($stmt->affected_rows === 0) {
+                    $statuscode = 404;
+                    throw new Exception("Cliente non trovato con ID: $id");
+                }
+
+                if ($conn->commit()) {
+                    $statuscode = 200; // operazione ha avuto sucesso
+                } else {
+                    $conn->rollback(); // In caso di errore, annulla la transazione
+                    $statuscode = 500; //l'operazione non si è conessa corretamente
+                }
+            } catch (Exception $e) {
+                $conn->rollback(); // In caso di errore, annulla la transazione
+
+                $statuscode = 500; // (Errore interno del server)
+            }
+            break;
         default:
             $statuscode = 404; //operazione non presente nella web api
             break;

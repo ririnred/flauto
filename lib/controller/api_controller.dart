@@ -259,9 +259,9 @@ class ApiController {
     throw Exception('Failed to update persona: ${res.statusCode}');
   }
 
-  Future<Sede> updateSede(Sede sede) async {
+  Future<bool> updateSede(Sede sede) async {
     final uri = Uri.parse(baseUrl);
-    final body = jsonEncode({"persona": sede.toJson()});
+    final body = jsonEncode({"sede": sede.toJson()});
     final res = await http.patch(
       uri,
       body: body,
@@ -271,14 +271,14 @@ class ApiController {
       },
     );
     if (res.statusCode == 200) {
-      return Sede.fromJson(json.decode(res.body));
+      return true;
     }
     throw Exception('Failed to update sede: ${res.statusCode}');
   }
 
-  Future<Tessera> updateTessera(Tessera tessera) async {
+  Future<bool> updateTessera(Tessera tessera) async {
     final uri = Uri.parse(baseUrl);
-    final body = jsonEncode({"persona": tessera.toJson()});
+    final body = jsonEncode({"tessera": tessera.toJson()});
     final res = await http.patch(
       uri,
       body: body,
@@ -288,7 +288,7 @@ class ApiController {
       },
     );
     if (res.statusCode == 200) {
-      return Tessera.fromJson(json.decode(res.body));
+      return true;
     }
     throw Exception('Failed to update tessera: ${res.statusCode}');
   }
@@ -311,7 +311,7 @@ class ApiController {
   }
 
   Future<void> deleteTessera(int id) async {
-    final uri = Uri.parse('${baseUrl}elimina_cliente?id=$id');
+    final uri = Uri.parse('${baseUrl}elimina_tessera?id=$id');
     final res = await http.delete(uri);
     if (res.statusCode != 200) {
       throw Exception('Failed to delete tessera: ${res.statusCode}');

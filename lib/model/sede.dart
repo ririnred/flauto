@@ -13,8 +13,8 @@ class Sede {
     required this.indirizzo,
   });
 
-  Sede.fromJson(Map<String, dynamic> json) :
-        id = (json['id'] as num?)?.toInt(),
+  Sede.fromJson(Map<String, dynamic> json)
+      : id = (json['id'] as num?)?.toInt(),
         nome = json['nome'] as String,
         indirizzo = json['indirizzo'] as String;
 
@@ -24,11 +24,11 @@ class Sede {
       nome: xmlElement.findElements('nome').single.text,
       indirizzo: xmlElement.findElements('idirizzo').single.text,
     );
-  }   
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'nome': nome,
-        'idirizzo': indirizzo,
+        'indirizzo': indirizzo,
       };
 }

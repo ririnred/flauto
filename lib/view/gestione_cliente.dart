@@ -26,9 +26,6 @@ class _GestioneClienteState extends State<GestioneCliente> {
     _sediFuture = widget.apiController.getSedi();
   }
 
-  // void refreshData() {
-  //   setState(() => _clientiFuture = widget.apiController.getClienti());
-  // }
   void _refreshData() {
     setState(() {
       _clientiFuture = widget.apiController.getClienti();
@@ -43,7 +40,7 @@ class _GestioneClienteState extends State<GestioneCliente> {
       _clientiFuture = widget.apiController.getClienti();
       await _clientiFuture;
     } catch (e) {
-      setState(() => _errorMessage = 'Failed to load clients: $e');
+      setState(() => _errorMessage = 'Failed to load clienti: $e');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -215,7 +212,6 @@ class _GestioneClienteState extends State<GestioneCliente> {
               if (_formKey.currentState!.validate()) {
                 try {
                   if (cliente == null) {
-                    print(selectedSede?.nome ?? "sssssessooooo");
                     await widget.apiController.creaClienteTessera(
                       nome: nomeController.text,
                       cognome: cognomeController.text,
