@@ -277,7 +277,7 @@ class ApiController {
   Future<void> deletePersona(int id) async {
     final uri = Uri.parse('${baseUrl}elimina_cliente?content=clienti&id=$id');
     final res = await http.delete(uri);
-    if (res.statusCode != 204) {
+    if (res.statusCode != 200) {
       throw Exception('Failed to delete persona: ${res.statusCode}');
     }
   }
@@ -285,7 +285,7 @@ class ApiController {
   Future<void> deleteSede(int id) async {
     final uri = Uri.parse('${baseUrl}elimina_cliente?content=sedi&id=$id');
     final res = await http.delete(uri);
-    if (res.statusCode != 204) {
+    if (res.statusCode != 200) {
       throw Exception('Failed to delete sede: ${res.statusCode}');
     }
   }
@@ -293,7 +293,7 @@ class ApiController {
   Future<void> deleteTessera(int id) async {
     final uri = Uri.parse('${baseUrl}elimina_cliente?content=tessere&id=$id');
     final res = await http.delete(uri);
-    if (res.statusCode != 204) {
+    if (res.statusCode != 200) {
       throw Exception('Failed to delete tessera: ${res.statusCode}');
     }
   }
