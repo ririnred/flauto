@@ -17,10 +17,10 @@ class _GestioneTessereState extends State<GestioneTessere> {
   @override
   void initState() {
     super.initState();
-    _refreshData();
+    refreshData();
   }
 
-  void _refreshData() {
+  void refreshData() {
     setState(() => _tessereFuture = widget.apiController.getTessere());
   }
 
@@ -32,7 +32,7 @@ class _GestioneTessereState extends State<GestioneTessere> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _refreshData,
+            onPressed: refreshData,
           ),
         ],
       ),
@@ -61,7 +61,7 @@ class _GestioneTessereState extends State<GestioneTessere> {
                 ),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete),
-                  onPressed: () => _deleteTessera(tessera.id),
+                  onPressed: () => deleteTessera(tessera.id),
                 ),
               );
             },
@@ -71,7 +71,7 @@ class _GestioneTessereState extends State<GestioneTessere> {
     );
   }
 
-  void _deleteTessera(int? id) async {
+  void deleteTessera(int? id) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -93,7 +93,7 @@ class _GestioneTessereState extends State<GestioneTessere> {
     if (confirm == true) {
       try {
         await widget.apiController.deleteTessera(id!);
-        _refreshData();
+        refreshData();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString())),

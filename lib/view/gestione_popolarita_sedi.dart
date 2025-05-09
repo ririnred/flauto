@@ -23,10 +23,10 @@ class _GestionePopolaritaSediState extends State<GestionePopolaritaSedi> {
   @override
   void initState() {
     super.initState();
-    _refreshData();
+    refreshData();
   }
 
-  void _refreshData() {
+  void refreshData() {
     setState(() {
       _popolaritaFuture = widget.apiController.getPopolaritaSedi(
         nome: _nomeSede,
@@ -37,7 +37,7 @@ class _GestionePopolaritaSediState extends State<GestionePopolaritaSedi> {
     });
   }
 
-  Future<void> _selectDate(BuildContext context, bool isStartDate) async {
+  Future<void> selectDate(BuildContext context, bool isStartDate) async {
     final picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -53,7 +53,7 @@ class _GestionePopolaritaSediState extends State<GestionePopolaritaSedi> {
           _endDate = picked;
         }
       });
-      _refreshData();
+      refreshData();
     }
   }
 
@@ -65,11 +65,11 @@ class _GestionePopolaritaSediState extends State<GestionePopolaritaSedi> {
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_alt),
-            onPressed: () => _showFiltersDialog(),
+            onPressed: () => showFiltersDialog(),
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _refreshData,
+            onPressed: refreshData,
           ),
         ],
       ),
@@ -118,7 +118,7 @@ class _GestionePopolaritaSediState extends State<GestionePopolaritaSedi> {
     );
   }
 
-  void _showFiltersDialog() {
+  void showFiltersDialog() {
     final nomeController = TextEditingController(text: _nomeSede);
     final indirizzoController = TextEditingController(text: _indirizzoSede);
 
@@ -147,7 +147,7 @@ class _GestionePopolaritaSediState extends State<GestionePopolaritaSedi> {
                   children: [
                     Expanded(
                       child: TextButton(
-                        onPressed: () => _selectDate(context, true),
+                        onPressed: () => selectDate(context, true),
                         child: Text(
                           _startDate == null 
                             ? 'Seleziona data inizio'
@@ -157,7 +157,7 @@ class _GestionePopolaritaSediState extends State<GestionePopolaritaSedi> {
                     ),
                     Expanded(
                       child: TextButton(
-                        onPressed: () => _selectDate(context, false),
+                        onPressed: () => selectDate(context, false),
                         child: Text(
                           _endDate == null 
                             ? 'Seleziona data fine'
@@ -180,14 +180,14 @@ class _GestionePopolaritaSediState extends State<GestionePopolaritaSedi> {
                 _startDate = null;
                 _endDate = null;
               });
-              _refreshData();
+              refreshData();
               Navigator.pop(context);
             },
             child: const Text('Reset filtri'),
           ),
           ElevatedButton(
             onPressed: () {
-              _refreshData();
+              refreshData();
               Navigator.pop(context);
             },
             child: const Text('Applica'),

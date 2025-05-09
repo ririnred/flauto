@@ -21,11 +21,11 @@ class _GestioneClienteState extends State<GestioneCliente> {
   @override
   void initState() {
     super.initState();
-    _refreshData();
+    refreshData();
     _sediFuture = widget.apiController.getSedi();
   }
 
-  void _refreshData() {
+  void refreshData() {
     setState(() => _clientiFuture = widget.apiController.getClienti());
   }
 
@@ -37,7 +37,7 @@ class _GestioneClienteState extends State<GestioneCliente> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _refreshData,
+            onPressed: refreshData,
           ),
         ],
       ),
@@ -63,11 +63,11 @@ class _GestioneClienteState extends State<GestioneCliente> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.edit),
-                      onPressed: () => _showEditClienteDialog(cliente),
+                      onPressed: () => showEditClienteDialog(cliente),
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete),
-                      onPressed: () => _deleteCliente(cliente.id),
+                      onPressed: () => deleteCliente(cliente.id),
                     ),
                   ],
                 ),
@@ -77,13 +77,13 @@ class _GestioneClienteState extends State<GestioneCliente> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddClienteDialog(),
+        onPressed: () => showAddClienteDialog(),
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  void _deleteCliente(int? id) async {
+  void deleteCliente(int? id) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -105,7 +105,7 @@ class _GestioneClienteState extends State<GestioneCliente> {
     if (confirm == true) {
       try {
         await widget.apiController.deletePersona(id!);
-        _refreshData();
+        refreshData();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString())),
@@ -114,10 +114,10 @@ class _GestioneClienteState extends State<GestioneCliente> {
     }
   }
 
-  void _showAddClienteDialog() => _showClienteForm();
-  void _showEditClienteDialog(Persona cliente) => _showClienteForm(cliente: cliente);
+  void showAddClienteDialog() => showClienteForm();
+  void showEditClienteDialog(Persona cliente) => showClienteForm(cliente: cliente);
 
-  void _showClienteForm({Persona? cliente}) async {
+  void showClienteForm({Persona? cliente}) async {
     final sedi = await _sediFuture;
     final nomeController = TextEditingController(text: cliente?.nome);
     final cognomeController = TextEditingController(text: cliente?.cognome);
@@ -191,7 +191,7 @@ class _GestioneClienteState extends State<GestioneCliente> {
                     );
                     await widget.apiController.updatePersona(updated);
                   }
-                  _refreshData();
+                  refreshData();
                   Navigator.pop(context);
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(

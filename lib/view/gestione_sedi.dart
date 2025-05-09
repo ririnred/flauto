@@ -19,10 +19,10 @@ class _GestioneSediState extends State<GestioneSedi> {
   @override
   void initState() {
     super.initState();
-    _refreshData();
+    refreshData();
   }
 
-  void _refreshData() {
+  void refreshData() {
     setState(() => _sediFuture = widget.apiController.getSedi());
   }
 
@@ -34,7 +34,7 @@ class _GestioneSediState extends State<GestioneSedi> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _refreshData,
+            onPressed: refreshData,
           ),
         ],
       ),
@@ -60,11 +60,11 @@ class _GestioneSediState extends State<GestioneSedi> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.edit),
-                      onPressed: () => _showSedeForm(sede),
+                      onPressed: () => showSedeForm(sede),
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete),
-                      onPressed: () => _deleteSede(sede.id!),
+                      onPressed: () => deleteSede(sede.id!),
                     ),
                   ],
                 ),
@@ -74,13 +74,13 @@ class _GestioneSediState extends State<GestioneSedi> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showSedeForm(),
+        onPressed: () => showSedeForm(),
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  void _deleteSede(int id) async {
+  void deleteSede(int id) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -102,7 +102,7 @@ class _GestioneSediState extends State<GestioneSedi> {
     if (confirm == true) {
       try {
         await widget.apiController.deleteSede(id);
-        _refreshData();
+        refreshData();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString())),
@@ -111,7 +111,7 @@ class _GestioneSediState extends State<GestioneSedi> {
     }
   }
 
-  void _showSedeForm([Sede? sede]) {
+  void showSedeForm([Sede? sede]) {
     final nomeController = TextEditingController(text: sede?.nome);
     final indirizzoController = TextEditingController(text: sede?.indirizzo);
 
@@ -158,7 +158,7 @@ class _GestioneSediState extends State<GestioneSedi> {
                     await widget.apiController.updateSede(newSede);
                   }
                   
-                  _refreshData();
+                  refreshData();
                   Navigator.pop(context);
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
