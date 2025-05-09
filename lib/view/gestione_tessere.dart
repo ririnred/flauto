@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../controller/api_controller.dart';
 import '../model/tessera.dart';
 
@@ -86,7 +87,11 @@ class _GestioneTessereState extends State<GestioneTessere> {
                 children: [
                   Text('Punti: ${tessera.punti}'),
                   Text(
-                      'Data creazione: ${tessera.dataCreazione.toString().substring(0, 10)}'),
+                    'Data creazione: ${DateFormat('dd/MM/yyyy').format(tessera.dataCreazione)}',
+                  ),
+                  if (tessera.cliente != null)
+                    Text(
+                        'Cliente: ${tessera.cliente!.nome} ${tessera.cliente!.cognome}'),
                 ],
               ),
               trailing: IconButton(
