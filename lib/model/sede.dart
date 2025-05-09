@@ -5,30 +5,30 @@ import 'package:xml/xml.dart' as xml;
 class Sede {
   int? id;
   String nome;
-  String idirizzo;
+  String indirizzo;
 
   Sede({
     this.id,
     required this.nome,
-    required this.idirizzo,
+    required this.indirizzo,
   });
 
   Sede.fromJson(Map<String, dynamic> json) :
         id = (json['id'] as num?)?.toInt(),
         nome = json['nome'] as String,
-        idirizzo = json['idirizzo'] as String;
+        indirizzo = json['indirizzo'] as String;
 
   factory Sede.fromXml(xml.XmlElement xmlElement) {
     return Sede(
       id: int.parse(xmlElement.findElements('id').single.text),
       nome: xmlElement.findElements('nome').single.text,
-      idirizzo: xmlElement.findElements('idirizzo').single.text,
+      indirizzo: xmlElement.findElements('idirizzo').single.text,
     );
   }   
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'nome': nome,
-        'idirizzo': idirizzo,
+        'idirizzo': indirizzo,
       };
 }

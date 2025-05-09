@@ -13,7 +13,7 @@ class ApiController {
 
 
 
-  
+
 
   /// ricevi una lista di persone con alcuni filtri (XML/JSON)
   Future<List<Persona>> getClienti({String responseType = 'json'}) async {
@@ -68,7 +68,7 @@ class ApiController {
             .map((node) => Sede(
                   id: node.getAttribute('id') != null ? int.parse(node.getAttribute('id')!) : null,
                   nome: node.findElements('nome').single.text,
-                  idirizzo: node.findElements('indirizzo').single.text,
+                  indirizzo: node.findElements('indirizzo').single.text,
                 ))
             .toList();
       } else {
