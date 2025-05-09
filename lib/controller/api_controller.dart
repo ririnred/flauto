@@ -152,7 +152,7 @@ class ApiController {
     if (endDate != null)
       params['end_date'] = endDate.toIso8601String().substring(0, 10);
 
-    final uri = Uri.parse(baseUrl).replace(queryParameters: params);
+    final uri = Uri.parse('${baseUrl}read').replace(queryParameters: params);
     final res = await http.get(uri);
     if (res.statusCode == 200) {
       if (responseType.toLowerCase() == 'xml') {

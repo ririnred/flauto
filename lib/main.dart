@@ -9,7 +9,7 @@ import 'controller/api_controller.dart';
 void main() {
   runApp(const MainApp(
       apiController: ApiController(
-          baseUrl: "http://localhost/scientology_market/smapi.php/")));
+          baseUrl: "http://localhost/flauto/smapi.php/")));
 }
 
 class MainApp extends StatelessWidget {

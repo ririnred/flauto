@@ -102,7 +102,7 @@ class _GestionePopolaritaSediState extends State<GestionePopolaritaSedi> {
                       children: [
                         const Text('Andamento mensile:', style: TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 10),
-                        ...sede['mesi'].map<Widget>((mese) => ListTile(
+                        ...(sede['mesi'] ?? []).map<Widget>((mese) => ListTile(
                           title: Text(mese['mese']),
                           trailing: Text('${mese['n_tessere_create']} tessere'),
                         )).toList(),
