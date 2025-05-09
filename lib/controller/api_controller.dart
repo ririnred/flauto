@@ -9,15 +9,12 @@ import '/model/tessera.dart';
 class ApiController {
   final String baseUrl;
 
-  ApiController({required this.baseUrl});
-
-
-
-
+  const ApiController({required this.baseUrl});
 
   /// ricevi una lista di persone con alcuni filtri (XML/JSON)
   Future<List<Persona>> getClienti({String responseType = 'json'}) async {
-    final uri = Uri.parse('$baseUrl?op=read&content=clienti&response_type=$responseType');
+    final uri =
+        Uri.parse('${baseUrl}read?content=clienti&response_type=$responseType');
     final res = await http.get(uri);
     if (res.statusCode == 200) {
       if (responseType.toLowerCase() == 'xml') {
@@ -51,12 +48,12 @@ class ApiController {
     String? indirizzo,
   }) async {
     final params = <String, String>{
-      'op': 'read',
       'content': 'sedi',
       'response_type': responseType,
     };
     if (nome != null && nome.isNotEmpty) params['nome'] = nome;
-    if (indirizzo != null && indirizzo.isNotEmpty) params['indirizzo'] = indirizzo;
+    if (indirizzo != null && indirizzo.isNotEmpty)
+      params['indirizzo'] = indirizzo;
 
     final uri = Uri.parse(baseUrl).replace(queryParameters: params);
     final res = await http.get(uri);
@@ -66,7 +63,9 @@ class ApiController {
         return document
             .findAllElements('sede')
             .map((node) => Sede(
-                  id: node.getAttribute('id') != null ? int.parse(node.getAttribute('id')!) : null,
+                  id: node.getAttribute('id') != null
+                      ? int.parse(node.getAttribute('id')!)
+                      : null,
                   nome: node.findElements('nome').single.text,
                   indirizzo: node.findElements('indirizzo').single.text,
                 ))
@@ -103,19 +102,17 @@ class ApiController {
     if (res.statusCode == 200) {
       if (responseType.toLowerCase() == 'xml') {
         final document = xml.XmlDocument.parse(res.body);
-        return document
-            .findAllElements('tessera')
-            .map((node) {
-              final cliente = node.findElements('cliente').single;
-              return Tessera(
-                id: int.parse(node.getAttribute('numero_tessera')!),
-                punti: int.parse(node.findElements('punti').single.text),
-                dataCreazione: DateTime.parse(node.findElements('data_di_creazione').single.text),
-                sedeId: -1, // parsing sedeDiCreazione name/address not mapped
-                clienteId: int.parse(cliente.getAttribute('id')!),
-              );
-            })
-            .toList();
+        return document.findAllElements('tessera').map((node) {
+          final cliente = node.findElements('cliente').single;
+          return Tessera(
+            id: int.parse(node.getAttribute('numero_tessera')!),
+            punti: int.parse(node.findElements('punti').single.text),
+            dataCreazione: DateTime.parse(
+                node.findElements('data_di_creazione').single.text),
+            sedeId: -1, // parsing sedeDiCreazione name/address not mapped
+            clienteId: int.parse(cliente.getAttribute('id')!),
+          );
+        }).toList();
       } else {
         final data = json.decode(res.body);
         final list = data['tessere'] as List<dynamic>;
@@ -138,14 +135,16 @@ class ApiController {
     DateTime? endDate,
   }) async {
     final params = <String, String>{
-      'op': 'read',
       'content': 'popolarita_sedi',
       'response_type': responseType,
     };
     if (nome != null && nome.isNotEmpty) params['nome'] = nome;
-    if (indirizzo != null && indirizzo.isNotEmpty) params['indirizzo'] = indirizzo;
-    if (startDate != null) params['start_date'] = startDate.toIso8601String().substring(0, 10);
-    if (endDate != null) params['end_date'] = endDate.toIso8601String().substring(0, 10);
+    if (indirizzo != null && indirizzo.isNotEmpty)
+      params['indirizzo'] = indirizzo;
+    if (startDate != null)
+      params['start_date'] = startDate.toIso8601String().substring(0, 10);
+    if (endDate != null)
+      params['end_date'] = endDate.toIso8601String().substring(0, 10);
 
     final uri = Uri.parse(baseUrl).replace(queryParameters: params);
     final res = await http.get(uri);
@@ -154,14 +153,19 @@ class ApiController {
         final document = xml.XmlDocument.parse(res.body);
         // return il Documento XML
         return document.findAllElements('sede').map((node) {
-          final periods = node.findElements('periodo').map((p) => {
-            'mese': p.getAttribute('mese'),
-            'n_tessere_create': int.parse(p.getAttribute('n_tessere_create')!),
-          }).toList();
+          final periods = node
+              .findElements('periodo')
+              .map((p) => {
+                    'mese': p.getAttribute('mese'),
+                    'n_tessere_create':
+                        int.parse(p.getAttribute('n_tessere_create')!),
+                  })
+              .toList();
           return {
             'nome': node.getAttribute('nome'),
             'indirizzo': node.getAttribute('indirizzo'),
-            'n_tot_di_tessere_create': int.parse(node.getAttribute('n_tot_di_tessere_create')!),
+            'n_tot_di_tessere_create':
+                int.parse(node.getAttribute('n_tot_di_tessere_create')!),
             'mesi': periods,
           };
         }).toList();
@@ -175,129 +179,120 @@ class ApiController {
     throw Exception('Failed to get popolarita_sedi: \${res.statusCode}');
   }
 
-
-
-
-
   /// Crea un nuovo cliente con tessera associata
-Future<bool> creaClienteTessera({
-  required String nome,
-  required String cognome,
-  required String mail,
-  required int sedeId,
-}) async {
-  final uri = Uri.parse('$baseUrl/crea_clientetessera');
-  
-  final response = await http.post(
-    uri,
-    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-    body: {
-      'nome': nome,
-      'cognome': cognome,
-      'mail': mail,
-      'sede_id': sedeId.toString(),
-    },
-  );
+  Future<bool> creaClienteTessera({
+    required String nome,
+    required String cognome,
+    required String mail,
+    required int sedeId,
+  }) async {
+    final uri = Uri.parse('$baseUrl/crea_clientetessera');
 
-  if (response.statusCode == 200) {
-    return true; // Successo
-  } else if (response.statusCode == 400) {
-    throw Exception('Dati mancanti o non validi');
-  } else if (response.statusCode == 500) {
-    throw Exception('Errore interno del server');
-  } else {
-    throw Exception('Errore sconosciuto: ${response.statusCode}');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: {
+        'nome': nome,
+        'cognome': cognome,
+        'mail': mail,
+        'sede_id': sedeId.toString(),
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return true; // Successo
+    } else if (response.statusCode == 400) {
+      throw Exception('Dati mancanti o non validi');
+    } else if (response.statusCode == 500) {
+      throw Exception('Errore interno del server');
+    } else {
+      throw Exception('Errore sconosciuto: ${response.statusCode}');
+    }
   }
-}
 
-Future<Sede> createSede(Sede sede) async {
-  final uri = Uri.parse(baseUrl);
-  final body = {
-    'op': 'create',
-    'content': 'sedi',
-    ...sede.toJson(),
-  };
-  final res = await http.post(uri, body: json.encode(body), headers: {'Content-Type': 'application/json'});
-  if (res.statusCode == 201) {
-    return Sede.fromJson(json.decode(res.body));
+  Future<Sede> createSede(Sede sede) async {
+    final uri = Uri.parse(baseUrl);
+    final body = {
+      'op': 'create',
+      'content': 'sedi',
+      ...sede.toJson(),
+    };
+    final res = await http.post(uri,
+        body: json.encode(body), headers: {'Content-Type': 'application/json'});
+    if (res.statusCode == 201) {
+      return Sede.fromJson(json.decode(res.body));
+    }
+    throw Exception('Failed to create sede: \${res.statusCode}');
   }
-  throw Exception('Failed to create sede: \${res.statusCode}');
-}
-
-
-
-
 
   // === UPDATE ===
-Future<Persona> updatePersona(Persona persona) async {
-  final uri = Uri.parse(baseUrl);
-  final body = {
-    'op': 'update',
-    'content': 'clienti',
-    ...persona.toJson(),
-  };
-  final res = await http.put(uri, body: json.encode(body), headers: {'Content-Type': 'application/json'});
-  if (res.statusCode == 200) {
-    return Persona.fromJson(json.decode(res.body));
+  Future<Persona> updatePersona(Persona persona) async {
+    final uri = Uri.parse(baseUrl);
+    final body = {
+      'op': 'update',
+      'content': 'clienti',
+      ...persona.toJson(),
+    };
+    final res = await http.put(uri,
+        body: json.encode(body), headers: {'Content-Type': 'application/json'});
+    if (res.statusCode == 200) {
+      return Persona.fromJson(json.decode(res.body));
+    }
+    throw Exception('Failed to update persona: \${res.statusCode}');
   }
-  throw Exception('Failed to update persona: \${res.statusCode}');
-}
 
-Future<Sede> updateSede(Sede sede) async {
-  final uri = Uri.parse(baseUrl);
-  final body = {
-    'op': 'update',
-    'content': 'sedi',
-    ...sede.toJson(),
-  };
-  final res = await http.put(uri, body: json.encode(body), headers: {'Content-Type': 'application/json'});
-  if (res.statusCode == 200) {
-    return Sede.fromJson(json.decode(res.body));
+  Future<Sede> updateSede(Sede sede) async {
+    final uri = Uri.parse(baseUrl);
+    final body = {
+      'op': 'update',
+      'content': 'sedi',
+      ...sede.toJson(),
+    };
+    final res = await http.put(uri,
+        body: json.encode(body), headers: {'Content-Type': 'application/json'});
+    if (res.statusCode == 200) {
+      return Sede.fromJson(json.decode(res.body));
+    }
+    throw Exception('Failed to update sede: \${res.statusCode}');
   }
-  throw Exception('Failed to update sede: \${res.statusCode}');
-}
 
-Future<Tessera> updateTessera(Tessera tessera) async {
-  final uri = Uri.parse(baseUrl);
-  final body = {
-    'op': 'update',
-    'content': 'tessere',
-    ...tessera.toJson(),
-  };
-  final res = await http.put(uri, body: json.encode(body), headers: {'Content-Type': 'application/json'});
-  if (res.statusCode == 200) {
-    return Tessera.fromJson(json.decode(res.body));
+  Future<Tessera> updateTessera(Tessera tessera) async {
+    final uri = Uri.parse(baseUrl);
+    final body = {
+      'op': 'update',
+      'content': 'tessere',
+      ...tessera.toJson(),
+    };
+    final res = await http.put(uri,
+        body: json.encode(body), headers: {'Content-Type': 'application/json'});
+    if (res.statusCode == 200) {
+      return Tessera.fromJson(json.decode(res.body));
+    }
+    throw Exception('Failed to update tessera: \${res.statusCode}');
   }
-  throw Exception('Failed to update tessera: \${res.statusCode}');
-}
-
-
-
-
-
 
   // === DELETE ===
-Future<void> deletePersona(int id) async {
-  final uri = Uri.parse('$baseUrl?op=delete&content=clienti&id=\$id');
-  final res = await http.delete(uri);
-  if (res.statusCode != 204) {
-    throw Exception('Failed to delete persona: \${res.statusCode}');
+  Future<void> deletePersona(int id) async {
+    final uri = Uri.parse('$baseUrl?op=delete&content=clienti&id=\$id');
+    final res = await http.delete(uri);
+    if (res.statusCode != 204) {
+      throw Exception('Failed to delete persona: \${res.statusCode}');
+    }
   }
-}
 
-Future<void> deleteSede(int id) async {
-  final uri = Uri.parse('$baseUrl?op=delete&content=sedi&id=\$id');
-  final res = await http.delete(uri);
-  if (res.statusCode != 204) {
-    throw Exception('Failed to delete sede: \${res.statusCode}');
+  Future<void> deleteSede(int id) async {
+    final uri = Uri.parse('$baseUrl?op=delete&content=sedi&id=\$id');
+    final res = await http.delete(uri);
+    if (res.statusCode != 204) {
+      throw Exception('Failed to delete sede: \${res.statusCode}');
+    }
   }
-}
 
-Future<void> deleteTessera(int id) async {
-  final uri = Uri.parse('$baseUrl?op=delete&content=tessere&id=\$id');
-  final res = await http.delete(uri);
-  if (res.statusCode != 204) {
-    throw Exception('Failed to delete tessera: \${res.statusCode}');
+  Future<void> deleteTessera(int id) async {
+    final uri = Uri.parse('$baseUrl?op=delete&content=tessere&id=\$id');
+    final res = await http.delete(uri);
+    if (res.statusCode != 204) {
+      throw Exception('Failed to delete tessera: \${res.statusCode}');
+    }
   }
-}
 }
