@@ -34,6 +34,7 @@ class _GestioneClienteState extends State<GestioneCliente> {
       _clientiFuture = widget.apiController.getClienti();
       _errorMessage = null;
     });
+    _sediFuture = widget.apiController.getSedi();
   }
 
   Future<void> loadClienti() async {
@@ -149,93 +150,6 @@ class _GestioneClienteState extends State<GestioneCliente> {
     }
   }
 
-  /*
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gestione Clienti'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _refreshData,
-          ),
-        ],
-      ),
-      body: FutureBuilder<List<Persona>>(
-        future: _clientiFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Errore: ${snapshot.error}'));
-          }
-          final clienti = snapshot.data!;
-          return ListView.builder(
-            itemCount: clienti.length,
-            itemBuilder: (context, index) {
-              final cliente = clienti[index];
-              return ListTile(
-                title: Text('${cliente.nome} ${cliente.cognome}'),
-                subtitle: Text(cliente.mail),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () => showEditClienteDialog(cliente),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () => deleteCliente(cliente.id),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => showAddClienteDialog(),
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-
-
-  void deleteCliente(int? id) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Conferma eliminazione'),
-        content: const Text('Sei sicuro di voler eliminare questo cliente?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annulla'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Elimina'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      try {
-        await widget.apiController.deletePersona(id!);
-        refreshData();
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
-      }
-    }
-  }
-*/
   void showAddClienteDialog() => _showClienteForm();
   void showEditClienteDialog(Persona cliente) =>
       _showClienteForm(cliente: cliente);
@@ -273,18 +187,20 @@ class _GestioneClienteState extends State<GestioneCliente> {
                   validator: (v) => v!.isEmpty ? 'Inserisci email' : null,
                   keyboardType: TextInputType.emailAddress,
                 ),
-                DropdownButtonFormField<Sede>(
-                  value: selectedSede,
-                  hint: const Text('Seleziona Sede'),
-                  items: sedi
-                      .map((s) => DropdownMenuItem(
-                            value: s,
-                            child: Text('${s.nome} - ${s.indirizzo}'),
-                          ))
-                      .toList(),
-                  onChanged: (s) => selectedSede = s,
-                  validator: (v) => v == null ? 'Seleziona sede' : null,
-                ),
+                if (cliente == null) ...[
+                  DropdownButtonFormField<Sede>(
+                    value: selectedSede,
+                    hint: const Text('Seleziona Sede Creazione Tessera'),
+                    items: sedi
+                        .map((s) => DropdownMenuItem(
+                              value: s,
+                              child: Text('${s.nome} - ${s.indirizzo}'),
+                            ))
+                        .toList(),
+                    onChanged: (s) => selectedSede = s,
+                    validator: (v) => v == null ? 'Seleziona sede' : null,
+                  )
+                ],
               ],
             ),
           ),
@@ -299,6 +215,7 @@ class _GestioneClienteState extends State<GestioneCliente> {
               if (_formKey.currentState!.validate()) {
                 try {
                   if (cliente == null) {
+                    print(selectedSede?.nome ?? "sssssessooooo");
                     await widget.apiController.creaClienteTessera(
                       nome: nomeController.text,
                       cognome: cognomeController.text,
