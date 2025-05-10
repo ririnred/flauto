@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart' as xml;
@@ -251,6 +253,29 @@ class ApiController {
     }
   }
 
+  Future<bool> createTessera(
+      {required dynamic cliente_id, required dynamic sede_creazione_id}) async {
+    final uri = Uri.parse("${baseUrl}crea_tessera");
+
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: {
+        'cliente_id': _parseInt(cliente_id),
+        'sede_id': _parseInt(sede_creazione_id),
+      },
+    );
+    if (response.statusCode == 200) {
+      return true; // Successo
+    } else if (response.statusCode == 400) {
+      throw Exception('Dati mancanti o non validi');
+    } else if (response.statusCode == 500) {
+      throw Exception('Errore interno del server');
+    } else {
+      throw Exception('Errore sconosciuto: ${response.statusCode}');
+    }
+  }
+
   // === UPDATE ===
   Future<bool> updatePersona(Persona persona) async {
     final uri = Uri.parse(baseUrl);
@@ -328,5 +353,12 @@ class ApiController {
     if (res.statusCode != 200) {
       throw Exception('Failed to delete tessera: ${res.statusCode}');
     }
+  }
+
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
   }
 }

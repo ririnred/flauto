@@ -284,7 +284,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                     case "tessere":
                         //query per estrarre tutte le tessere create con i relativi dati della sede di creazione e del clientes
                         $sql =
-                            "SELECT tessera.id, tessera.punti, tessera.data_creazione, CONCAT(sede.nome, ', ', sede.indirizzo) AS sede_di_creazione , persona.id AS cId, persona.nome AS cNome, persona.cognome AS cCognome, persona.mail AS cEmail FROM `tessera` JOIN sede ON sede.id=tessera.sede_creazione_id JOIN persona ON persona.id=tessera.cliente_id";
+                            "SELECT tessera.id, tessera.punti, tessera.data_creazione, CONCAT(sede.nome, ', ', sede.indirizzo) AS sede_di_creazione , persona.id AS cId, persona.nome AS cNome, persona.cognome AS cCognome, persona.mail AS cEmail FROM `tessera` JOIN sede ON sede.id=tessera.sede_creazione_id JOIN persona ON persona.id=tessera.cliente_id ORDER BY tessera.id";
                         $conditions = [];
                         $stmt_type = "";
                         $params = [];
@@ -369,6 +369,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                                 //singolo elemento con i suoi attributi
                                 $json->tessere[$i] = (object) [
                                     "numero_tessera" => $record["id"],
+                                    "punti" => $record["punti"],
                                     "data_di_creazione" =>
                                         $record["data_creazione"],
                                     "sede_di_creazione" =>
@@ -646,6 +647,37 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                         "ss",
                         $_POST["nome"],
                         $_POST["indirizzo"]
+                    );
+                    $stmt->execute();
+
+                    if ($conn->commit()) {
+                        $statuscode = 200; // operazione ha avuto sucesso
+                    } else {
+                        $statuscode = 204; //l'operazione non si è conessa corretamente
+                    }
+                } catch (Exception $e) {
+                    $conn->rollback(); // In caso di errore, annulla la transazione
+                    $statuscode = 500; // (Errore interno del server)
+                }
+            } else {
+                $statuscode = 400; // non ci sono tutti i valori necessari per eseguire il valore
+            }
+            break;
+        case "crea_tessera":
+            // Verifica se tutti i parametri necessari sono stati inviati
+            if (isset($_POST["cliente_id"]) && isset($_POST["sede_id"])) {
+                try {
+                    // Inizia una transazione per garantire l'atomicità delle operazioni
+                    $conn->begin_transaction();
+
+                    // Inserimento della persona nel database
+                    $stmt = $conn->prepare(
+                        "INSERT INTO tessera (sede_creazione_id, cliente_id, punti) VALUES (?, ?, 0)"
+                    );
+                    $stmt->bind_param(
+                        "ii",
+                        $_POST["cliente_id"],
+                        $_POST["sede_id"]
                     );
                     $stmt->execute();
 
