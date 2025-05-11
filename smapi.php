@@ -117,30 +117,35 @@ $conn = new mysqli("localhost", "root", "", "scientology_market");
 
 //END ----------------------------------- INIT VAR ------------------------------------------
 
-function cors() {
-        // Allow from any origin
-        if (isset($_SERVER['HTTP_ORIGIN'])) {
-            // Decide if the origin in $_SERVER['HTTP_ORIGIN'] is one
-            // you want to allow, and if so:
-            header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
-            header('Access-Control-Allow-Credentials: true');
-            header('Access-Control-Max-Age: 86400');    // cache for 1 day
-        }
-
-        // Access-Control headers are received during OPTIONS requests
-        if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-
-            if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD']))
-                // may also be using PUT, PATCH, HEAD etc
-                header("Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS");
-
-            if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']))
-                header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
-
-            exit(0);
-        }
+function cors()
+{
+    // Allow from any origin
+    if (isset($_SERVER["HTTP_ORIGIN"])) {
+        // Decide if the origin in $_SERVER['HTTP_ORIGIN'] is one
+        // you want to allow, and if so:
+        header("Access-Control-Allow-Origin: {$_SERVER["HTTP_ORIGIN"]}");
+        header("Access-Control-Allow-Credentials: true");
+        header("Access-Control-Max-Age: 86400"); // cache for 1 day
     }
 
+    // Access-Control headers are received during OPTIONS requests
+    if ($_SERVER["REQUEST_METHOD"] == "OPTIONS") {
+        if (isset($_SERVER["HTTP_ACCESS_CONTROL_REQUEST_METHOD"])) {
+            // may also be using PUT, PATCH, HEAD etc
+            header(
+                "Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            );
+        }
+
+        if (isset($_SERVER["HTTP_ACCESS_CONTROL_REQUEST_HEADERS"])) {
+            header(
+                "Access-Control-Allow-Headers: {$_SERVER["HTTP_ACCESS_CONTROL_REQUEST_HEADERS"]}"
+            );
+        }
+
+        exit(0);
+    }
+}
 
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
     //switch per gestire le varie operazioni
@@ -672,22 +677,26 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
 
                     // Inserimento della persona nel database
                     $stmt = $conn->prepare(
-                        "INSERT INTO tessera (sede_creazione_id, cliente_id, punti) VALUES (?, ?, 0)"
+                        "INSERT INTO tessera (id, sede_creazione_id, cliente_id, punti, data_creazione) VALUES (NULL, ?, ?, 0, current_timestamp())"
                     );
-                    $stmt->bind_param(
-                        "ii",
-                        $_POST["cliente_id"],
-                        $_POST["sede_id"]
-                    );
-                    $stmt->execute();
-
-                    if ($conn->commit()) {
-                        $statuscode = 200; // operazione ha avuto sucesso
-                    } else {
-                        $statuscode = 204; //l'operazione non si è conessa corretamente
+                    if (!$stmt) {
+                        throw new Exception("Prepare failed: " . $conn->error);
                     }
+
+                    $stmt->bind_param(
+                        "ss",
+                        $_POST["sede_id"],
+                        $_POST["cliente_id"]
+                    );
+
+                    if (!$stmt->execute()) {
+                        throw new Exception("Execute failed: " . $stmt->error);
+                    }
+
+                    $conn->commit();
+                    $statuscode = 200;
                 } catch (Exception $e) {
-                    $conn->rollback(); // In caso di errore, annulla la transazione
+                    echo "Errore: " . $e->getMessage(); // Logga l'errore
                     $statuscode = 500; // (Errore interno del server)
                 }
             } else {

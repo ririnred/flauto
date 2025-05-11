@@ -15,20 +15,23 @@ class ApiController {
 
   /// ricevi una lista di persone con alcuni filtri (XML/JSON)
   Future<List<Persona>> getClienti({String responseType = 'json'}) async {
-    final uri =
-        Uri.parse('${baseUrl}read?content=clienti&response=$responseType');
+    final uri = Uri.parse(
+      '${baseUrl}read?content=clienti&response=$responseType',
+    );
     final res = await http.get(uri);
     if (res.statusCode == 200) {
       if (responseType.toLowerCase() == 'xml') {
         final document = xml.XmlDocument.parse(res.body);
         return document
             .findAllElements('cliente')
-            .map((node) => Persona(
-                  id: int.parse(node.getAttribute('id')!),
-                  nome: node.findElements('nome').single.text,
-                  cognome: node.findElements('cognome').single.text,
-                  mail: node.findElements('mail').single.text,
-                ))
+            .map(
+              (node) => Persona(
+                id: int.parse(node.getAttribute('id')!),
+                nome: node.findElements('nome').single.text,
+                cognome: node.findElements('cognome').single.text,
+                mail: node.findElements('mail').single.text,
+              ),
+            )
             .toList();
       } else {
         final data = json.decode(res.body);
@@ -65,13 +68,16 @@ class ApiController {
         final document = xml.XmlDocument.parse(res.body);
         return document
             .findAllElements('sede')
-            .map((node) => Sede(
-                  id: node.getAttribute('id') != null
-                      ? int.parse(node.getAttribute('id')!)
-                      : null,
-                  nome: node.findElements('nome').single.text,
-                  indirizzo: node.findElements('indirizzo').single.text,
-                ))
+            .map(
+              (node) => Sede(
+                id:
+                    node.getAttribute('id') != null
+                        ? int.parse(node.getAttribute('id')!)
+                        : null,
+                nome: node.findElements('nome').single.text,
+                indirizzo: node.findElements('indirizzo').single.text,
+              ),
+            )
             .toList();
       } else {
         final data = json.decode(res.body);
@@ -113,15 +119,18 @@ class ApiController {
         return document.findAllElements('tessera').map((node) {
           final cliente = node.findElements('cliente').single;
           return Tessera(
-            id: int.parse(node.getAttribute('numero_tessera') ??
-                '0'), // Usa '0' come fallback
+            id: int.parse(
+              node.getAttribute('numero_tessera') ?? '0',
+            ), // Usa '0' come fallback
             punti: int.parse(node.findElements('punti').single.text),
             dataCreazione: DateTime.parse(
-                node.findElements('data_di_creazione').single.text),
-            sedeCreazione: node
-                .findElements('sede_di_creazione')
-                .single
-                .text, // Estrai da XML
+              node.findElements('data_di_creazione').single.text,
+            ),
+            sedeCreazione:
+                node
+                    .findElements('sede_di_creazione')
+                    .single
+                    .text, // Estrai da XML
             cliente: Persona.fromXml(cliente),
           );
         }).toList();
@@ -173,19 +182,24 @@ class ApiController {
         final document = xml.XmlDocument.parse(res.body);
         // return il Documento XML
         return document.findAllElements('sede').map((node) {
-          final periods = node
-              .findElements('periodo')
-              .map((p) => {
-                    'mese': p.getAttribute('mese'),
-                    'n_tessere_create':
-                        int.parse(p.getAttribute('n_tessere_create')!),
-                  })
-              .toList();
+          final periods =
+              node
+                  .findElements('periodo')
+                  .map(
+                    (p) => {
+                      'mese': p.getAttribute('mese'),
+                      'n_tessere_create': int.parse(
+                        p.getAttribute('n_tessere_create')!,
+                      ),
+                    },
+                  )
+                  .toList();
           return {
             'nome': node.getAttribute('nome'),
             'indirizzo': node.getAttribute('indirizzo'),
-            'n_tot_di_tessere_create':
-                int.parse(node.getAttribute('n_tot_di_tessere_create')!),
+            'n_tot_di_tessere_create': int.parse(
+              node.getAttribute('n_tot_di_tessere_create')!,
+            ),
             'mesi': periods,
           };
         }).toList();
@@ -230,17 +244,16 @@ class ApiController {
     }
   }
 
-  Future<bool> createSede(
-      {required String nome, required String indirizzo}) async {
+  Future<bool> createSede({
+    required String nome,
+    required String indirizzo,
+  }) async {
     final uri = Uri.parse("${baseUrl}crea_sede");
 
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: {
-        'nome': nome,
-        'indirizzo': indirizzo,
-      },
+      body: {'nome': nome, 'indirizzo': indirizzo},
     );
     if (response.statusCode == 200) {
       return true; // Successo
@@ -253,18 +266,21 @@ class ApiController {
     }
   }
 
-  Future<bool> createTessera(
-      {required dynamic cliente_id, required dynamic sede_creazione_id}) async {
+  Future<bool> createTessera({
+    required int cliente_id,
+    required int sede_creazione_id,
+  }) async {
     final uri = Uri.parse("${baseUrl}crea_tessera");
 
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: {
-        'cliente_id': _parseInt(cliente_id),
-        'sede_id': _parseInt(sede_creazione_id),
+        'cliente_id': cliente_id.toString(),
+        'sede_id': sede_creazione_id.toString(),
       },
     );
+
     if (response.statusCode == 200) {
       return true; // Successo
     } else if (response.statusCode == 400) {

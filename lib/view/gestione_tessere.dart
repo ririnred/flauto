@@ -57,10 +57,7 @@ class _GestioneTessereState extends State<GestioneTessere> {
       appBar: AppBar(
         title: const Text('Gestione Tessere'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _refreshData,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _refreshData),
         ],
       ),
       body: _buildMainContent(),
@@ -105,7 +102,8 @@ class _GestioneTessereState extends State<GestioneTessere> {
                   ),
                   if (tessera.cliente != null)
                     Text(
-                        'Cliente: ${tessera.cliente!.nome} ${tessera.cliente!.cognome}'),
+                      'Cliente: ${tessera.cliente!.nome} ${tessera.cliente!.cognome}',
+                    ),
                 ],
               ),
               trailing: IconButton(
@@ -122,20 +120,23 @@ class _GestioneTessereState extends State<GestioneTessere> {
   void deleteTessera(int? id) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Conferma eliminazione'),
-        content: const Text('Sei sicuro di voler eliminare questa tessera?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annulla'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Conferma eliminazione'),
+            content: const Text(
+              'Sei sicuro di voler eliminare questa tessera?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Annulla'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Elimina'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Elimina'),
-          ),
-        ],
-      ),
     );
 
     if (confirm == true) {
@@ -143,9 +144,9 @@ class _GestioneTessereState extends State<GestioneTessere> {
         await widget.apiController.deleteTessera(id!);
         _refreshData();
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     }
   }
@@ -162,69 +163,76 @@ class _GestioneTessereState extends State<GestioneTessere> {
 
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Nuova Tessera'),
-        content: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<Sede>(
-                  value: selectedSede,
-                  hint: const Text('Seleziona Sede Creazione Tessera'),
-                  items: sedi
-                      .map((s) => DropdownMenuItem(
-                            value: s,
-                            child: Text('${s.nome} - ${s.indirizzo}'),
-                          ))
-                      .toList(),
-                  onChanged: (s) => selectedSede = s,
-                  validator: (v) => v == null ? 'Seleziona sede' : null,
+      builder:
+          (context) => AlertDialog(
+            title: Text('Nuova Tessera'),
+            content: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<Sede>(
+                      value: selectedSede,
+                      hint: const Text('Seleziona Sede Creazione Tessera'),
+                      items:
+                          sedi
+                              .map(
+                                (s) => DropdownMenuItem(
+                                  value: s,
+                                  child: Text('${s.nome} - ${s.indirizzo}'),
+                                ),
+                              )
+                              .toList(),
+                      onChanged: (s) => selectedSede = s,
+                      validator: (v) => v == null ? 'Seleziona sede' : null,
+                    ),
+                    DropdownButtonFormField<Persona>(
+                      value: selectedCliente,
+                      hint: const Text('Seleziona Cliente'),
+                      items:
+                          clienti
+                              .map(
+                                (s) => DropdownMenuItem(
+                                  value: s,
+                                  child: Text('${s.nome} ${s.cognome}'),
+                                ),
+                              )
+                              .toList(),
+                      onChanged: (s) => selectedCliente = s,
+                      validator: (v) => v == null ? 'Seleziona sede' : null,
+                    ),
+                  ],
                 ),
-                DropdownButtonFormField<Persona>(
-                  value: selectedCliente,
-                  hint: const Text('Seleziona Cliente'),
-                  items: clienti
-                      .map((s) => DropdownMenuItem(
-                            value: s,
-                            child: Text('${s.nome} ${s.cognome}'),
-                          ))
-                      .toList(),
-                  onChanged: (s) => selectedCliente = s,
-                  validator: (v) => v == null ? 'Seleziona sede' : null,
-                )
-              ],
+              ),
             ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annulla'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (_formKey.currentState!.validate()) {
-                try {
-                  await widget.apiController.createTessera(
-                    cliente_id: selectedCliente!.id!,
-                    sede_creazione_id: selectedSede!.id!,
-                  );
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Annulla'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (_formKey.currentState!.validate()) {
+                    try {
+                      await widget.apiController.createTessera(
+                        cliente_id: selectedCliente!.id!,
+                        sede_creazione_id: selectedSede!.id!,
+                      );
 
-                  _refreshData();
-                  Navigator.pop(context);
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(e.toString())),
-                  );
-                }
-              }
-            },
-            child: const Text('Salva'),
+                      Navigator.pop(context);
+                      _refreshData();
+                    } catch (e) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(e.toString())));
+                    }
+                  }
+                },
+                child: const Text('Salva'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }
