@@ -30,23 +30,152 @@
 //------------------- DOCS ----------------------------------
 /*
     WEB SERVICE MULTI-OPERAZIONE CON NOME DELL'OPERAZIONE IN URL
-    richiesta http://localhost/scientology_market/smapi.php/operazione?querystring
+    richiesta http://localhost/scientology_market/smapi.php/[operazione]?[querystring]
 
-    OPERAZIONI:
-    -read (metodo: GET) (tipo: read) (parametro: content) (risposta: JSON(default) | XML)
-        -se response=json (default)
-            restituisce la risposta in json
-        -se response=xml
-            restituisce la risposta in xml
-        -se content=clienti
-            restituisce l'elenco dei clienti registrati e che quindi ad un certo punto hanno richiesto una tessera
-        -se content=sedi
-            restituisce l'elenco delle sedi
-        -se content=tessere
-            restituisce l'elenco di tutte le tessere
-        -se content=popolarita_sedi
-            restituisce l'elenco delle sedi con il numero totale di tessere mai create in tale sede ed il totale di tessere create per ogni mese se ce ne sono state
-    -PATCH | PUT:
+    ╔═════════════════╦═════╦══════╦═══════════╦════════╗
+    ║                 ║ GET ║ POST ║ PUT|PATCH ║ DELETE ║
+    ╠═════════════════╬═════╬══════╬═══════════╬════════╣
+    ║ clienti         ║  ✓  ║   ✓  ║     ✓     ║    ✓   ║
+    ╠═════════════════╬═════╬══════╬═══════════╬════════╣
+    ║ tessere         ║  ✓  ║   ✓  ║     ✓     ║    ✓   ║
+    ╠═════════════════╬═════╬══════╬═══════════╬════════╣
+    ║ sedi            ║  ✓  ║   ✓  ║     ✓     ║    ✓   ║
+    ╠═════════════════╬═════╬══════╬═══════════╬════════╣
+    ║ popolarità sedi ║  ✓  ║   ✕  ║     ✕    ║    ✕   ║
+    ╚═════════════════╩═════╩══════╩═══════════╩════════╝
+
+
+    OPERAZIONI GET:
+     • read (tipo: READ) (parametri: content, response) (risposta: JSON(default) | XML)
+        QUERYSTRING:
+         - response:
+            se response=json (default):
+                restituisce il contenuto della risposta in json
+            se response=xml:
+                restituisce il contenuto della risposta in xml
+         - content:
+            - se content=clienti (restituisce l'elenco dei clienti registrati e che quindi ad un certo punto hanno richiesto una tessera)
+            - se content=sedi (restituisce l'elenco delle sedi):
+                parametri opzionali: nome=[string] (filtro di ricerca), indirizzo=[string] (filtro di ricerca)
+            - se content=tessere (restituisce l'elenco di tutte le tessere):
+                parametri opzionali: nome=[string] (filtro di ricerca), cognome=[string] (filtro di ricerca)
+            - se content=popolarita_sedi (restituisce l'elenco delle sedi con il numero totale di tessere mai create in tale sede ed il totale di tessere create per ogni mese se ce ne sono state):
+                parametri opzionali: nome=[string] (filtro di ricerca), indirizzo=[string] (filtro di ricerca), end_date=[string] (filtro di ricerca), start_date=[string] (filtro di ricerca)
+        RESPONSE CODE:
+         - 200 OK: l'api restituisce correttamente i dati secondo il formato scelto
+         - 204 No Content: la richiesta è stata eseguita con successo ma non ci sono dati da mostare, non viene restituito nulla
+         - 400 Bad Request: la richiesta non è stata eseguita correttamente, mancano parametri
+         - 404 Not Found: la richiesta non è stata eseguita correttamente, l'operazione specificata non è supportata
+
+
+    OPERAZIONI POST:
+     • crea_clientetessera
+        BODY (x-www-form-urlencoded):
+         - nome [string]
+         - cognome [string]
+         - mail [string]
+         - sede_id [int]
+        RESPONSE CODE:
+         - 200 OK: dati inseriti con successo
+         - 204 No Content: la richiesta è stata eseguita con successo ma non sono stati inseriti i dati
+         - 400 Bad Request: la richiesta non è stata eseguita correttamente, mancano parametri
+         - 500 Internal Server Error: il server non è riuscito a soddisfare la richiasta per via di problemi interni, si consideri controllare la correttezza dei dati inviati
+
+     • crea_sede
+        BODY (x-www-form-urlencoded):
+         - nome [string]
+         - indirizzo [string]
+        RESPONSE CODE:
+         - 200 OK: dati inseriti con successo
+         - 204 No Content: la richiesta è stata eseguita con successo ma non sono stati inseriti i dati
+         - 400 Bad Request: la richiesta non è stata eseguita correttamente, mancano parametri
+         - 500 Internal Server Error: il server non è riuscito a soddisfare la richiasta per via di problemi interni, si consideri controllare la correttezza dei dati inviati
+
+     • crea_cliente
+        BODY (x-www-form-urlencoded):
+         - nome [string]
+         - cognome [string]
+         - mail [string]
+         - sede_id [int]
+        RESPONSE CODE:
+         - 200 OK: dati inseriti con successo
+         - 204 No Content: la richiesta è stata eseguita con successo ma non sono stati inseriti i dati
+         - 400 Bad Request: la richiesta non è stata eseguita correttamente, mancano parametri
+         - 500 Internal Server Error: il server non è riuscito a soddisfare la richiasta per via di problemi interni, si consideri controllare la correttezza dei dati inviati
+
+     • crea_tessera
+        BODY (x-www-form-urlencoded):
+         - cliente_id [int]
+         - sede_id [id]
+        RESPONSE CODE:
+         - 200 OK: dati inseriti con successo
+         - 204 No Content: la richiesta è stata eseguita con successo ma non sono stati inseriti i dati
+         - 400 Bad Request: la richiesta non è stata eseguita correttamente, mancano parametri
+         - 500 Internal Server Error: il server non è riuscito a soddisfare la richiasta per via di problemi interni, si consideri controllare la correttezza dei dati inviati
+
+
+    OPERAZIONI DELETE:
+     • elimina_cliente
+        QUERYSTRING:
+         - id [int]
+        RESPONSE CODE:
+         - 200 OK: dati eliminati con successo
+         - 400 Bad Request: parametri insufficienti. Impossibile stabilire quali dati cancellare, id non fornito
+         - 404 Not Found: non sono stati trovati dati corrispondenti ai parametri forniti
+         - 500 Internal Server Error: errore interno al server o di connesione al database
+
+     • elimina_sede
+        QUERYSTRING:
+         - id [int]
+        RESPONSE CODE:
+         - 200 OK: dati eliminati con successo
+         - 400 Bad Request: parametri insufficienti. Impossibile stabilire quali dati cancellare, id non fornito
+         - 404 Not Found: non sono stati trovati dati corrispondenti ai parametri forniti
+         - 500 Internal Server Error: errore interno al server o di connesione al database
+
+     • elimina_tessera
+        QUERYSTRING:
+         - id [int]
+        RESPONSE CODE:
+         - 200 OK: dati eliminati con successo
+         - 400 Bad Request: parametri insufficienti. Impossibile stabilire quali dati cancellare, id non fornito
+         - 404 Not Found: non sono stati trovati dati corrispondenti ai parametri forniti
+         - 500 Internal Server Error: errore interno al server o di connesione al database
+
+
+    OPERAZIONI PATCH | PUT:
+        BODY (raw json or xml string):
+         Elementi accettati (devono essere obbligatoriamente contenuti in un root element, vedi esempio sotto):
+
+         • tessera
+            PARAMETRI
+             - id [int] (obbligatorio)
+             - punti [string] (opzionale)
+             - cliente_id [int] (opzionale)
+             - sede_creazione_id [int] (opzionale)
+             - data_creazione [string] [datetime] (opzionale)
+
+         • sede
+            PARAMETRI
+             - id [int] (obbligatorio)
+             - nome [string] (opzionale)
+             - indirizzo [string] (opzionale)
+
+         • persona
+            PARAMETRI
+             - id [int] (obbligatorio)
+             - nome [string] (opzionale)
+             - cognome [string] (opzionale)
+             - mail [string] (opzionale)
+
+        HEADER:
+         • Content-Type: application/[json | xml] (obbligatorio, altrimenti defaulta in json)
+
+        RESPONSE CODE:
+         - 200 OK: dati aggiornati con successo
+         - 400 Bad Request: parametri non validi o header errato
+         - 500 Internal Server Error: errore generico del server o durante l'Inserimento nel database, non è stato possibile aggiornare i dati
+
         es di formattazione richiesta in json:
             HEADERS:
                 [...]
@@ -848,7 +977,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
         $input = json_decode($input, false);
 
         if ($input === null) {
-            $statuscode = 404;
+            $statuscode = 400;
         }
     }
 
